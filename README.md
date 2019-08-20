@@ -5,7 +5,7 @@
 File tree:
 
 ```
-index.js          # 主入口
+index.jsx          # 主入口
 routes.js         # 路由配置
 actions/          ＃ 接口动作(success/fail等)
 ├── index.js
@@ -17,10 +17,12 @@ models/           # 接口定义(url, method等)
 └── users.js
 ```
 
-## 主入口
+## 主入口 index.jsx
 
 ```js
-import EdataRouter from './edata-router'
+import React from 'react'
+import {render} from 'react-dom'
+import EdataRouter from 'edata-router'
 const app = new EdataRouter({})
 
 // 导入接口配置
@@ -32,7 +34,8 @@ app.model(actions2, models2)
 app.route(routes)
 
 // 挂载运行
-app.run(document.getElementById('main'))
+const App = app.run()
+render(<App></App>, document.getElementById('main'))
 
 ```
 

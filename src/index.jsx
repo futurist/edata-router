@@ -1,15 +1,12 @@
 
-const React = require('react')
-const {render} = require('react-dom')
-const {
+import React from 'react'
+import PropTypes from 'prop-types'
+import * as History from 'history'
+import {
   Router,
   Route,
   Switch,
-} = require('react-router')
-
-import PropTypes from 'prop-types'
-import * as History from 'history'
-
+} from 'react-router'
 import qs from 'qs'
 import { makeAPI, initModel } from './util'
 import matchPath from './match-path'
@@ -42,7 +39,7 @@ export default class InitClass {
   route (routes) {
     this.routes = routes
   }
-  run (rootElement) {
+  run () {
     let curHooksBranch = []
     const { routes, data, routeMode } = this
     const model = this.model = window.model = this.makeModel(data)
@@ -78,7 +75,7 @@ export default class InitClass {
         return (
           <Router history={history}>
             <Switch>
-              {this.props.routes.map((route, i) => (
+              {routes.map((route, i) => (
                 <RouteWithSubRoutes key={i} {...route} model={model} />
               ))}
             </Switch>
@@ -90,7 +87,7 @@ export default class InitClass {
       router: PropTypes.object
     };
 
-    render(<App routes={routes} />, rootElement)
+    return App
 
     function getAPIFromRoute ({ api = [] }) {
       const props = {}
@@ -260,26 +257,3 @@ function computeRootMatch (pathname) {
     isExact: pathname === "/"
   }
 }
-
-function renderRoutes(routes, extraProps = {}, switchProps = {}) {
-    return routes ? (
-      <Switch {...switchProps}>
-        {routes.map((route, i) => (
-          <Route
-            key={route.key || i}
-            path={route.path}
-            exact={route.exact}
-            strict={route.strict}
-            render={props =>
-              route.render ? (
-                route.render({ ...props, ...extraProps, route: route })
-              ) : (
-                <route.component {...props} {...extraProps} route={route} />
-              )
-            }
-          />
-        ))}
-      </Switch>
-    ) : null;
-}
-  
