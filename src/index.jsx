@@ -20,13 +20,15 @@ export default class InitClass {
       name,
       routeMode = '',
       paramStyle = 'simple',
+      queryKey = 'param',
+      mockKey = 'mock',
       edataConfig,
       ajaxSetting
     } = {}) {
     this.data = initData
     this.name = name
     this.routeMode = routeMode
-    this.makeModel = initModel(edataConfig, {ajaxSetting, paramStyle})
+    this.makeModel = initModel(edataConfig, {ajaxSetting, paramStyle, queryKey, mockKey})
   }
   model (modelActions, modelObject) {
     if(typeof modelActions==='function') {

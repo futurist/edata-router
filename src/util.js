@@ -91,6 +91,7 @@ export function initModel (config, unwrapOptions) {
 }
 
 export function unwrapAPI (unwrapOptions = {}) {
+  const {paramStyle, queryKey, mockKey} = unwrapOptions
   const ajaxSetting = {...globalAjaxSetting, ...unwrapOptions.ajaxSetting}
   return packer => {
     if (!packer) return
@@ -123,14 +124,15 @@ export function unwrapAPI (unwrapOptions = {}) {
                 })
               }
               if (!exec) exec = apiConfig
-              let { mock, param } = exec
+              let mock = exec[mockKey]
+              let param = exec[queryKey]
               if(typeof param==='function') {
                 param = param()
               }
               // console.log(exec, reducer)
               const method = String(exec.method || 'get').toUpperCase()
               const hasBody = /PUT|POST|PATCH/.test(method)
-              let url = replaceParams(exec.url, ...unwrapOptions.paramStyle === 'beatle' ? [options.params, options.options] : [options])
+              let url = replaceParams(exec.url, ...paramStyle === 'beatle' ? [options.params, options.options] : [options])
               query = {...param, ...query};
               if (!hasBody && !isEmpty(query)) {
                 url = url + '?' + qs.stringify(query)
