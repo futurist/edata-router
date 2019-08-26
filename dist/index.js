@@ -7447,6 +7447,9 @@ function initModel(config, unwrapOptions) {
 }
 function unwrapAPI() {
   var unwrapOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var paramStyle = unwrapOptions.paramStyle,
+      queryKey = unwrapOptions.queryKey,
+      mockKey = unwrapOptions.mockKey;
 
   var ajaxSetting = _objectSpread({}, globalAjaxSetting, {}, unwrapOptions.ajaxSetting);
 
@@ -7490,9 +7493,8 @@ function unwrapAPI() {
               }
 
               if (!exec) exec = apiConfig;
-              var _exec = exec,
-                  mock = _exec.mock,
-                  param = _exec.param;
+              var mock = exec[mockKey];
+              var param = exec[queryKey];
 
               if (typeof param === 'function') {
                 param = param();
@@ -7501,7 +7503,7 @@ function unwrapAPI() {
 
               var method = String(exec.method || 'get').toUpperCase();
               var hasBody = /PUT|POST|PATCH/.test(method);
-              var url = replaceParams.apply(void 0, [exec.url].concat(_toConsumableArray(unwrapOptions.paramStyle === 'beatle' ? [options.params, options.options] : [options])));
+              var url = replaceParams.apply(void 0, [exec.url].concat(_toConsumableArray(paramStyle === 'beatle' ? [options.params, options.options] : [options])));
               query = _objectSpread({}, param, {}, query);
 
               if (!hasBody && !isEmpty(query)) {
@@ -7744,6 +7746,10 @@ function () {
         routeMode = _ref$routeMode === void 0 ? '' : _ref$routeMode,
         _ref$paramStyle = _ref.paramStyle,
         paramStyle = _ref$paramStyle === void 0 ? 'simple' : _ref$paramStyle,
+        _ref$queryKey = _ref.queryKey,
+        queryKey = _ref$queryKey === void 0 ? 'param' : _ref$queryKey,
+        _ref$mockKey = _ref.mockKey,
+        mockKey = _ref$mockKey === void 0 ? 'mock' : _ref$mockKey,
         edataConfig = _ref.edataConfig,
         ajaxSetting = _ref.ajaxSetting;
 
@@ -7754,7 +7760,9 @@ function () {
     this.routeMode = routeMode;
     this.makeModel = initModel(edataConfig, {
       ajaxSetting: ajaxSetting,
-      paramStyle: paramStyle
+      paramStyle: paramStyle,
+      queryKey: queryKey,
+      mockKey: mockKey
     });
   }
 
@@ -7899,7 +7907,7 @@ function () {
             model.set(modelName, {});
           }
 
-          subModule = model.slice(modelName);
+          subModule = model.cut(modelName);
         }
 
         var isRoot = !route.path;

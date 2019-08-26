@@ -128,7 +128,7 @@ export default class InitClass {
         if (model.get(modelName) == null) {
           model.set(modelName, {})
         }
-        subModule = model.slice(modelName)
+        subModule = model.cut(modelName)
       }
       const isRoot = !route.path
       return (
