@@ -1,6 +1,6 @@
 {
   "name": "edata-router",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Edata router for react",
   "main": "dist/index.js",
   "scripts": {
