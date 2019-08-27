@@ -79,6 +79,12 @@ export function makeAPI (model, res) {
     forEach(res, (value, key) => {
       set(data._api, [namespace, key], value)
     })
+    const apis = data._api[namespace] || {}
+    forEach(model.actions, (value, key)=>{
+      if(!(key in apis)) {
+        set(data._api, [namespace, key], {})
+      }
+    })
     return data
   }
 }
@@ -124,6 +130,20 @@ export function unwrapAPI (unwrapOptions = {}) {
                 })
               }
               if (!exec) exec = apiConfig
+              const success = (callback && callback.success) ||
+                    (reducer && reducer.success) ||
+                    callback ||
+                    reducer
+              const onSuccess = (args)=>{
+                if (success) {
+                  const ret = success(store, args)
+                  Object.assign(store, ret)
+                  model.set(['_store', name], model.of(store))
+                }
+              }
+              if(!exec.url) {
+                return onSuccess({data: query})
+              }
               let mock = exec[mockKey]
               let param = exec[queryKey]
               if(typeof param==='function') {
@@ -198,19 +218,10 @@ export function unwrapAPI (unwrapOptions = {}) {
                 .then(beforeResponse)
                 .then(res => {
                   res = afterResponse(res)
-                  const success =
-                    (callback && callback.success) ||
-                    (reducer && reducer.success) ||
-                    callback ||
-                    reducer
                   // console.log('res', res, success, service, actions[service]);
-                  if (success) {
-                    const ret = success(store, {
-                      data: res
-                    })
-                    Object.assign(store, ret)
-                    model.set(['_store', name], model.of(store))
-                  }
+                  onSuccess({
+                    data: res
+                  })
                   return res
                 })
                 .catch(err => {
