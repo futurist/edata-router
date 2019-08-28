@@ -93,62 +93,6 @@ module.exports = require("react");
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports) {
-
-/**
- * Checks if `value` is classified as an `Array` object.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an array, else `false`.
- * @example
- *
- * _.isArray([1, 2, 3]);
- * // => true
- *
- * _.isArray(document.body.children);
- * // => false
- *
- * _.isArray('abc');
- * // => false
- *
- * _.isArray(_.noop);
- * // => false
- */
-var isArray = Array.isArray;
-
-module.exports = isArray;
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var stringify = __webpack_require__(32);
-var parse = __webpack_require__(33);
-var formats = __webpack_require__(19);
-
-module.exports = {
-    formats: formats,
-    parse: parse,
-    stringify: stringify
-};
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports) {
-
-module.exports = require("react-router");
-
-/***/ }),
-/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -1513,6 +1457,62 @@ module.exports = require("react-router");
 
 
 /***/ }),
+/* 2 */
+/***/ (function(module, exports) {
+
+/**
+ * Checks if `value` is classified as an `Array` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array, else `false`.
+ * @example
+ *
+ * _.isArray([1, 2, 3]);
+ * // => true
+ *
+ * _.isArray(document.body.children);
+ * // => false
+ *
+ * _.isArray('abc');
+ * // => false
+ *
+ * _.isArray(_.noop);
+ * // => false
+ */
+var isArray = Array.isArray;
+
+module.exports = isArray;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var stringify = __webpack_require__(32);
+var parse = __webpack_require__(33);
+var formats = __webpack_require__(19);
+
+module.exports = {
+    formats: formats,
+    parse: parse,
+    stringify: stringify
+};
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+module.exports = require("react-router");
+
+/***/ }),
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2388,7 +2388,7 @@ module.exports = isSymbol;
 var arrayEach = __webpack_require__(34),
     baseEach = __webpack_require__(35),
     castFunction = __webpack_require__(57),
-    isArray = __webpack_require__(1);
+    isArray = __webpack_require__(2);
 
 /**
  * Iterates over elements of `collection` and invokes `iteratee` for each element.
@@ -3597,7 +3597,7 @@ module.exports = keys;
 
 var baseTimes = __webpack_require__(41),
     isArguments = __webpack_require__(42),
-    isArray = __webpack_require__(1),
+    isArray = __webpack_require__(2),
     isBuffer = __webpack_require__(46),
     isIndex = __webpack_require__(23),
     isTypedArray = __webpack_require__(48);
@@ -4502,7 +4502,7 @@ module.exports = getValue;
 /* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isArray = __webpack_require__(1),
+var isArray = __webpack_require__(2),
     isKey = __webpack_require__(69),
     stringToPath = __webpack_require__(70),
     toString = __webpack_require__(93);
@@ -4529,7 +4529,7 @@ module.exports = castPath;
 /* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isArray = __webpack_require__(1),
+var isArray = __webpack_require__(2),
     isSymbol = __webpack_require__(16);
 
 /** Used to match property names within property paths. */
@@ -5292,7 +5292,7 @@ module.exports = toString;
 
 var Symbol = __webpack_require__(13),
     arrayMap = __webpack_require__(95),
-    isArray = __webpack_require__(1),
+    isArray = __webpack_require__(2),
     isSymbol = __webpack_require__(16);
 
 /** Used as references for various `Number` constants. */
@@ -6778,11 +6778,15 @@ function createMemoryHistory(props) {
 
 
 // EXTERNAL MODULE: external "react-router"
-var external_react_router_ = __webpack_require__(3);
+var external_react_router_ = __webpack_require__(4);
 
 // EXTERNAL MODULE: ./node_modules/_qs@6.8.0@qs/lib/index.js
-var lib = __webpack_require__(2);
+var lib = __webpack_require__(3);
 var lib_default = /*#__PURE__*/__webpack_require__.n(lib);
+
+// EXTERNAL MODULE: ./node_modules/_edata@0.8.12@edata/dist/umd.js
+var umd = __webpack_require__(1);
+var umd_default = /*#__PURE__*/__webpack_require__.n(umd);
 
 // EXTERNAL MODULE: ./node_modules/_lodash@4.17.15@lodash/forEach.js
 var forEach = __webpack_require__(17);
@@ -6791,10 +6795,6 @@ var forEach_default = /*#__PURE__*/__webpack_require__.n(forEach);
 // EXTERNAL MODULE: ./node_modules/_lodash@4.17.15@lodash/set.js
 var set = __webpack_require__(18);
 var set_default = /*#__PURE__*/__webpack_require__.n(set);
-
-// EXTERNAL MODULE: ./node_modules/_edata@0.8.12@edata/dist/umd.js
-var umd = __webpack_require__(4);
-var umd_default = /*#__PURE__*/__webpack_require__.n(umd);
 
 // EXTERNAL MODULE: ./node_modules/_is-plain-obj@2.0.0@is-plain-obj/index.js
 var _is_plain_obj_2_0_0_is_plain_obj = __webpack_require__(29);
@@ -7357,7 +7357,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
- // use native browser implementation if it supports aborting
+
+function noop() {} // use native browser implementation if it supports aborting
 
 var abortableFetch = 'signal' in new Request('') ? window.fetch : fetch;
 var defaultHeaders = {
@@ -7370,11 +7371,6 @@ var globalAjaxSetting = {
   afterResponse: defaultAfterResponse,
   errorHandler: defaultErrorHandler
 };
-
-var noop = function noop(v) {
-  return v;
-};
-
 var defaultReplaceParams = {
   encode: noop
 };
@@ -7716,6 +7712,14 @@ function matchPath(pathname) {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return src_InitClass; });
 function src_typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { src_typeof = function _typeof(obj) { return typeof obj; }; } else { src_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return src_typeof(obj); }
 
+function src_slicedToArray(arr, i) { return src_arrayWithHoles(arr) || src_iterableToArrayLimit(arr, i) || src_nonIterableRest(); }
+
+function src_nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function src_iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function src_arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
 function src_extends() { src_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return src_extends.apply(this, arguments); }
 
 function _possibleConstructorReturn(self, call) { if (call && (src_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
@@ -7739,6 +7743,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
 
 
 
@@ -7910,6 +7915,57 @@ function () {
             services.store = model.unwrap(['_store', name]) || {};
           });
         });
+
+        var bindComponentWithModel = function bindComponentWithModel(componentInstance) {
+          if (componentInstance instanceof external_react_default.a.Component) {
+            var pending = false;
+            var isMount = false;
+
+            var updater = function updater() {
+              if (isMount) {
+                componentInstance.forceUpdate();
+                pending = false;
+              } else {
+                pending = true;
+              }
+            };
+
+            var unmap = model.observer.map(function (_ref3) {
+              var path = _ref3.path;
+
+              if (path[0] === '_store' && path[1] in props) {
+                updater();
+              }
+            });
+            var oldComponentDidMount = (componentInstance.componentDidMount || noop).bind(componentInstance);
+
+            componentInstance.componentDidMount = function () {
+              oldComponentDidMount();
+              isMount = true;
+
+              if (pending) {
+                updater();
+              }
+            }.bind(componentInstance);
+          } else {
+            var _useState = Object(external_react_["useState"])(),
+                _useState2 = src_slicedToArray(_useState, 2),
+                _ = _useState2[0],
+                _updater = _useState2[1];
+
+            Object(external_react_["useEffect"])(function () {
+              return model.observer.map(function (_ref4) {
+                var path = _ref4.path;
+
+                if (path[0] === '_store' && path[1] in props) {
+                  _updater(Date.now());
+                }
+              });
+            }, []);
+          }
+        };
+
+        props.autoUpdate = bindComponentWithModel;
         return props;
       }
 

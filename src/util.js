@@ -7,6 +7,8 @@ import pathToRegexp from 'path-to-regexp'
 
 import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only'
 import { fetch } from 'whatwg-fetch'
+
+export function noop(){}
 // use native browser implementation if it supports aborting
 const abortableFetch = 'signal' in new Request('') ? window.fetch : fetch
 
@@ -22,7 +24,6 @@ export const globalAjaxSetting = {
   errorHandler: defaultErrorHandler
 }
 
-const noop = v => v
 const defaultReplaceParams = { encode: noop }
 function replaceParams (url, params, options) {
   return pathToRegexp.compile(url)(params || {}, options)

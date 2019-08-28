@@ -1,5 +1,5 @@
 
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 import PropTypes from 'prop-types'
 import * as History from 'history'
 import {
@@ -8,7 +8,8 @@ import {
   Switch,
 } from 'react-router'
 import qs from 'qs'
-import { makeAPI, initModel } from './util'
+import edata from 'edata'
+import { makeAPI, initModel, noop } from './util'
 import matchPath from './match-path'
 
 const createBrowserHistory = History.createHistory || History.createBrowserHistory
@@ -118,6 +119,43 @@ export default class InitClass {
           services.store = model.unwrap(['_store', name]) || {}
         })
       })
+      const bindComponentWithModel = componentInstance => {
+        if(componentInstance instanceof React.Component) {
+          let pending = false
+          let isMount = false
+          const updater = () => {
+            if (isMount) {
+              componentInstance.forceUpdate()
+              pending = false
+            } else {
+              pending = true
+            }
+          }
+          let unmap = model.observer.map(({path})=>{
+            if(path[0]==='_store' && path[1] in props) {
+              updater()
+            }
+          })
+          let oldComponentDidMount = (componentInstance.componentDidMount || noop).bind(componentInstance)
+          componentInstance.componentDidMount = function(){
+            oldComponentDidMount()
+            isMount = true
+            if (pending) {
+              updater()
+            }
+          }.bind(componentInstance)
+        } else {
+          const [_, updater] = useState()
+          useEffect(()=>{
+            return model.observer.map(({path})=>{
+              if(path[0]==='_store' && path[1] in props) {
+                updater(Date.now())
+              }
+            })
+          }, [])
+        }
+      }
+      props.autoUpdate = bindComponentWithModel
       return props
     }
 
