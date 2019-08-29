@@ -1,3 +1,10 @@
+<a name="1.0.4"></a>
+## [1.0.4](/compare/1.0.3...1.0.4) (2019-8-29 14:14:27)
+
+- fix: component render issue  [0b7d8f2](/commit/0b7d8f2)
+- try to add props.autoUpdate  [c11d763](/commit/c11d763)
+
+
 <a name="1.0.3"></a>
 ## [1.0.3](/compare/1.0.2...1.0.3) (2019-8-27 16:10:11)
 

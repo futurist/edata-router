@@ -1,6 +1,6 @@
 {
   "name": "edata-router",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Edata router for react",
   "main": "dist/index.js",
   "scripts": {
@@ -39,7 +39,5 @@
     "react-redux": "^7.1.1",
     "redux": "^4.0.4"
   },
-  "dependencies": {
-    
-  }
+  "dependencies": {}
 }
