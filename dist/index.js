@@ -82,7 +82,7 @@ module.exports =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 108);
+/******/ 	return __webpack_require__(__webpack_require__.s = 110);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -163,6 +163,62 @@ if (false) { var throwOnDirectAccess, ReactIs; } else {
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports) {
+
+/**
+ * Checks if `value` is classified as an `Array` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array, else `false`.
+ * @example
+ *
+ * _.isArray([1, 2, 3]);
+ * // => true
+ *
+ * _.isArray(document.body.children);
+ * // => false
+ *
+ * _.isArray('abc');
+ * // => false
+ *
+ * _.isArray(_.noop);
+ * // => false
+ */
+var isArray = Array.isArray;
+
+module.exports = isArray;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var stringify = __webpack_require__(38);
+var parse = __webpack_require__(39);
+var formats = __webpack_require__(24);
+
+module.exports = {
+    formats: formats,
+    parse: parse,
+    stringify: stringify
+};
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+module.exports = require("react-router");
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global, factory) {
@@ -1527,62 +1583,6 @@ if (false) { var throwOnDirectAccess, ReactIs; } else {
 
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-/**
- * Checks if `value` is classified as an `Array` object.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an array, else `false`.
- * @example
- *
- * _.isArray([1, 2, 3]);
- * // => true
- *
- * _.isArray(document.body.children);
- * // => false
- *
- * _.isArray('abc');
- * // => false
- *
- * _.isArray(_.noop);
- * // => false
- */
-var isArray = Array.isArray;
-
-module.exports = isArray;
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var stringify = __webpack_require__(38);
-var parse = __webpack_require__(39);
-var formats = __webpack_require__(24);
-
-module.exports = {
-    formats: formats,
-    parse: parse,
-    stringify: stringify
-};
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-module.exports = require("react-router");
-
-/***/ }),
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2484,7 +2484,7 @@ module.exports = isSymbol;
 var arrayEach = __webpack_require__(40),
     baseEach = __webpack_require__(41),
     castFunction = __webpack_require__(63),
-    isArray = __webpack_require__(4);
+    isArray = __webpack_require__(3);
 
 /**
  * Iterates over elements of `collection` and invokes `iteratee` for each element.
@@ -3828,7 +3828,7 @@ module.exports = keys;
 
 var baseTimes = __webpack_require__(47),
     isArguments = __webpack_require__(48),
-    isArray = __webpack_require__(4),
+    isArray = __webpack_require__(3),
     isBuffer = __webpack_require__(52),
     isIndex = __webpack_require__(27),
     isTypedArray = __webpack_require__(54);
@@ -4733,7 +4733,7 @@ module.exports = getValue;
 /* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isArray = __webpack_require__(4),
+var isArray = __webpack_require__(3),
     isKey = __webpack_require__(75),
     stringToPath = __webpack_require__(76),
     toString = __webpack_require__(99);
@@ -4760,7 +4760,7 @@ module.exports = castPath;
 /* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isArray = __webpack_require__(4),
+var isArray = __webpack_require__(3),
     isSymbol = __webpack_require__(19);
 
 /** Used to match property names within property paths. */
@@ -5523,7 +5523,7 @@ module.exports = toString;
 
 var Symbol = __webpack_require__(15),
     arrayMap = __webpack_require__(101),
-    isArray = __webpack_require__(4),
+    isArray = __webpack_require__(3),
     isSymbol = __webpack_require__(19);
 
 /** Used as references for various `Number` constants. */
@@ -6030,6 +6030,133 @@ module.exports = function(originalModule) {
 
 /***/ }),
 /* 108 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * Expose `arrayFlatten`.
+ */
+module.exports = flatten
+module.exports.from = flattenFrom
+module.exports.depth = flattenDepth
+module.exports.fromDepth = flattenFromDepth
+
+/**
+ * Flatten an array.
+ *
+ * @param  {Array} array
+ * @return {Array}
+ */
+function flatten (array) {
+  if (!Array.isArray(array)) {
+    throw new TypeError('Expected value to be an array')
+  }
+
+  return flattenFrom(array)
+}
+
+/**
+ * Flatten an array-like structure.
+ *
+ * @param  {Array} array
+ * @return {Array}
+ */
+function flattenFrom (array) {
+  return flattenDown(array, [])
+}
+
+/**
+ * Flatten an array-like structure with depth.
+ *
+ * @param  {Array}  array
+ * @param  {number} depth
+ * @return {Array}
+ */
+function flattenDepth (array, depth) {
+  if (!Array.isArray(array)) {
+    throw new TypeError('Expected value to be an array')
+  }
+
+  return flattenFromDepth(array, depth)
+}
+
+/**
+ * Flatten an array-like structure with depth.
+ *
+ * @param  {Array}  array
+ * @param  {number} depth
+ * @return {Array}
+ */
+function flattenFromDepth (array, depth) {
+  if (typeof depth !== 'number') {
+    throw new TypeError('Expected the depth to be a number')
+  }
+
+  return flattenDownDepth(array, [], depth)
+}
+
+/**
+ * Flatten an array indefinitely.
+ *
+ * @param  {Array} array
+ * @param  {Array} result
+ * @return {Array}
+ */
+function flattenDown (array, result) {
+  for (var i = 0; i < array.length; i++) {
+    var value = array[i]
+
+    if (Array.isArray(value)) {
+      flattenDown(value, result)
+    } else {
+      result.push(value)
+    }
+  }
+
+  return result
+}
+
+/**
+ * Flatten an array with depth.
+ *
+ * @param  {Array}  array
+ * @param  {Array}  result
+ * @param  {number} depth
+ * @return {Array}
+ */
+function flattenDownDepth (array, result, depth) {
+  depth--
+
+  for (var i = 0; i < array.length; i++) {
+    var value = array[i]
+
+    if (depth > -1 && Array.isArray(value)) {
+      flattenDownDepth(value, result, depth)
+    } else {
+      result.push(value)
+    }
+  }
+
+  return result
+}
+
+
+/***/ }),
+/* 109 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const arrayUniq = array => [...new Set(array)];
+
+module.exports = arrayUniq;
+
+
+/***/ }),
+/* 110 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -7095,10 +7222,10 @@ function createMemoryHistory(props) {
 
 
 // EXTERNAL MODULE: external "react-router"
-var external_react_router_ = __webpack_require__(6);
+var external_react_router_ = __webpack_require__(5);
 
 // EXTERNAL MODULE: ./node_modules/_qs@6.8.0@qs/lib/index.js
-var lib = __webpack_require__(5);
+var lib = __webpack_require__(4);
 var lib_default = /*#__PURE__*/__webpack_require__.n(lib);
 
 // EXTERNAL MODULE: ./node_modules/_lodash@4.17.15@lodash/forEach.js
@@ -7110,7 +7237,7 @@ var set = __webpack_require__(21);
 var set_default = /*#__PURE__*/__webpack_require__.n(set);
 
 // EXTERNAL MODULE: ./node_modules/_edata@0.8.12@edata/dist/umd.js
-var umd = __webpack_require__(3);
+var umd = __webpack_require__(6);
 var umd_default = /*#__PURE__*/__webpack_require__.n(umd);
 
 // EXTERNAL MODULE: ./node_modules/_is-plain-obj@2.0.0@is-plain-obj/index.js
@@ -9905,10 +10032,10 @@ var external_react_dom_ = __webpack_require__(32);
 setBatch(external_react_dom_["unstable_batchedUpdates"]);
 
 // EXTERNAL MODULE: ./node_modules/array-flatten/array-flatten.js
-var array_flatten = __webpack_require__(110);
+var array_flatten = __webpack_require__(108);
 
 // EXTERNAL MODULE: ./node_modules/array-uniq/index.js
-var array_uniq = __webpack_require__(111);
+var array_uniq = __webpack_require__(109);
 
 // CONCATENATED MODULE: ./src/index.jsx
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return src_EdataRouterClass; });
@@ -10334,134 +10461,6 @@ function computeRootMatch(pathname) {
     isExact: pathname === "/"
   };
 }
-
-/***/ }),
-/* 109 */,
-/* 110 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * Expose `arrayFlatten`.
- */
-module.exports = flatten
-module.exports.from = flattenFrom
-module.exports.depth = flattenDepth
-module.exports.fromDepth = flattenFromDepth
-
-/**
- * Flatten an array.
- *
- * @param  {Array} array
- * @return {Array}
- */
-function flatten (array) {
-  if (!Array.isArray(array)) {
-    throw new TypeError('Expected value to be an array')
-  }
-
-  return flattenFrom(array)
-}
-
-/**
- * Flatten an array-like structure.
- *
- * @param  {Array} array
- * @return {Array}
- */
-function flattenFrom (array) {
-  return flattenDown(array, [])
-}
-
-/**
- * Flatten an array-like structure with depth.
- *
- * @param  {Array}  array
- * @param  {number} depth
- * @return {Array}
- */
-function flattenDepth (array, depth) {
-  if (!Array.isArray(array)) {
-    throw new TypeError('Expected value to be an array')
-  }
-
-  return flattenFromDepth(array, depth)
-}
-
-/**
- * Flatten an array-like structure with depth.
- *
- * @param  {Array}  array
- * @param  {number} depth
- * @return {Array}
- */
-function flattenFromDepth (array, depth) {
-  if (typeof depth !== 'number') {
-    throw new TypeError('Expected the depth to be a number')
-  }
-
-  return flattenDownDepth(array, [], depth)
-}
-
-/**
- * Flatten an array indefinitely.
- *
- * @param  {Array} array
- * @param  {Array} result
- * @return {Array}
- */
-function flattenDown (array, result) {
-  for (var i = 0; i < array.length; i++) {
-    var value = array[i]
-
-    if (Array.isArray(value)) {
-      flattenDown(value, result)
-    } else {
-      result.push(value)
-    }
-  }
-
-  return result
-}
-
-/**
- * Flatten an array with depth.
- *
- * @param  {Array}  array
- * @param  {Array}  result
- * @param  {number} depth
- * @return {Array}
- */
-function flattenDownDepth (array, result, depth) {
-  depth--
-
-  for (var i = 0; i < array.length; i++) {
-    var value = array[i]
-
-    if (depth > -1 && Array.isArray(value)) {
-      flattenDownDepth(value, result, depth)
-    } else {
-      result.push(value)
-    }
-  }
-
-  return result
-}
-
-
-/***/ }),
-/* 111 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const arrayUniq = array => [...new Set(array)];
-
-module.exports = arrayUniq;
-
 
 /***/ })
 /******/ ])["default"];

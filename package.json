@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "peerDependencies": {
-    "react": ">=15",
+    "react": "^16.8.3",
     "react-router": "^5.0.1"
   },
   "devDependencies": {
