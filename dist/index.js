@@ -7916,6 +7916,7 @@ function unwrapAPI() {
           return function (query) {
             var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
             return Promise.resolve(typeof apiConfig === 'function' ? apiConfig() : apiConfig).then(function (apiConfig) {
+              options = options || {};
               var actions = model.unwrap(['_actions', name]) || {};
               var store = model.unwrap(['_store', name]) || {};
 
@@ -7966,6 +7967,7 @@ function unwrapAPI() {
 
               var method = String(exec.method || 'get').toUpperCase();
               var hasBody = /PUT|POST|PATCH/.test(method);
+              var urlParam = paramStyle === 'beatle' ? options.params : options;
               var url = replaceParams.apply(void 0, [exec.url].concat(_toConsumableArray(paramStyle === 'beatle' ? [options.params, options.options] : [options])));
               query = _objectSpread({}, param, {}, query);
 
@@ -8008,7 +8010,7 @@ function unwrapAPI() {
               var fail = callback && callback.fail || reducer && reducer.fail;
 
               if (start) {
-                start(store, url, init);
+                start(store, init);
               }
 
               var promise = mock ? Promise.resolve(typeof mock === 'function' ? mock() : mock instanceof Response ? mock : new Response(_is_plain_obj_2_0_0_is_plain_obj_default()(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock)) : abortableFetch(url, init); // console.error(url, init);
@@ -8020,7 +8022,10 @@ function unwrapAPI() {
                 res = afterResponse(res); // console.log('res', res, success, service, actions[service]);
 
                 onSuccess({
-                  data: res
+                  data: res,
+                  urlParam: urlParam,
+                  param: query,
+                  headerParam: init.headers
                 });
                 return res;
               })["catch"](function (err) {

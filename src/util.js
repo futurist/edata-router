@@ -112,6 +112,7 @@ export function unwrapAPI (unwrapOptions = {}) {
             Promise.resolve(
               typeof apiConfig === 'function' ? apiConfig() : apiConfig
             ).then(apiConfig => {
+              options = options || {}
               const actions = model.unwrap(['_actions', name]) || {}
               const store = model.unwrap(['_store', name]) || {}
               let {
@@ -154,6 +155,7 @@ export function unwrapAPI (unwrapOptions = {}) {
               // console.log(exec, reducer)
               const method = String(exec.method || 'get').toUpperCase()
               const hasBody = /PUT|POST|PATCH/.test(method)
+              const urlParam = paramStyle === 'beatle' ? options.params : options
               let url = replaceParams(exec.url, ...paramStyle === 'beatle' ? [options.params, options.options] : [options])
               query = {...param, ...query};
               if (!hasBody && !isEmpty(query)) {
@@ -195,7 +197,7 @@ export function unwrapAPI (unwrapOptions = {}) {
               const start = callback && callback.start || reducer && reducer.start
               const fail = callback && callback.fail || reducer && reducer.fail
               if(start) {
-                start(store, url, init)
+                start(store, init)
               }
               let promise = mock
                 ? Promise.resolve(
@@ -222,7 +224,10 @@ export function unwrapAPI (unwrapOptions = {}) {
                   res = afterResponse(res)
                   // console.log('res', res, success, service, actions[service]);
                   onSuccess({
-                    data: res
+                    data: res,
+                    urlParam,
+                    param: query,
+                    headerParam: init.headers
                   })
                   return res
                 })
