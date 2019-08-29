@@ -137,9 +137,10 @@ export function unwrapAPI (unwrapOptions = {}) {
                     reducer
               const onSuccess = (args)=>{
                 if (success) {
-                  const ret = success(store, args)
-                  Object.assign(store, ret)
+                  let ret = success(store, args)
+                  ret = Object.assign(store, ret)
                   model.set(['_store', name], model.of(store))
+                  return ret
                 }
               }
               if(!exec.url) {

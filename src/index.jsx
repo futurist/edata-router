@@ -8,14 +8,18 @@ import {
   Switch,
 } from 'react-router'
 import qs from 'qs'
-import edata from 'edata'
+
 import { makeAPI, initModel, noop } from './util'
 import matchPath from './match-path'
+import { Provider, connect } from 'react-redux'
+import { createStore } from 'redux'
+import arrayFlat from 'array-flatten'
+import arrayUniq from 'array-uniq'
 
 const createBrowserHistory = History.createHistory || History.createBrowserHistory
 const createHashHistory = History.createHashHistory
 
-export default class InitClass {
+export default class EdataRouterClass {
   constructor ({
       initData = {},
       name,
@@ -42,7 +46,7 @@ export default class InitClass {
   route (routes) {
     this.routes = routes
   }
-  run () {
+  run (options = {}) {
     let curHooksBranch = []
     const { routes, data, routeMode } = this
     const model = this.model = window.model = this.makeModel(data)
@@ -62,35 +66,23 @@ export default class InitClass {
     })
 
     computeLocationHooks(curLocation)
-    class App extends React.Component {
-      getChildContext = () => {
-        return {
-          router: {
-            ...history,
-            isActive(pathname) {
-              pathname = pathname.trim().replace(/\/$/, '')
-              return curHooksBranch.some((e)=> ((e.match||{}).path||'').indexOf(pathname) === 0 )
-            }
-          }
-        }
-      }
-      render () {
-        return (
-          <Router history={history}>
-            <Switch>
-              {routes.map((route, i) => (
-                <RouteWithSubRoutes key={i} {...route} model={model} />
-              ))}
-            </Switch>
-          </Router>
-        )
-      }
-    }
-    App.childContextTypes = {
-      router: PropTypes.object
-    };
 
-    return App
+    const allAPI = Object.keys(model.get(['_api']).value)
+    const reducer = (state, action) =>{
+      // console.log('reducer', store, action)
+    }
+    const store = createStore(reducer)
+
+    function expandAPINameItem (val) {
+      let names = [val]
+      if(val instanceof RegExp){
+        names = allAPI.filter(v=>val.test(v))
+      }
+      if(val === '*') {
+        names = allAPI
+      }
+      return names
+    }
 
     function getAPIFromRoute ({ api = [] }) {
       const props = {}
@@ -100,15 +92,8 @@ export default class InitClass {
       // })
       // props.store = model.unwrap(['_store', '_global']) || {}
 
-      const allAPI = Object.keys(model.get(['_api']).value)
       api.forEach(val => {
-        let names = [val]
-        if(val instanceof RegExp){
-          names = allAPI.filter(v=>val.test(v))
-        }
-        if(val === '*') {
-          names = allAPI
-        }
+        const names = expandAPINameItem(val)
         names.filter(Boolean).forEach(name=>{
           const services = {}
           props[name] = services
@@ -119,44 +104,38 @@ export default class InitClass {
           services.store = model.unwrap(['_store', name]) || {}
         })
       })
-      const bindComponentWithModel = componentInstance => {
-        if(componentInstance instanceof React.Component) {
-          let pending = false
-          let isMount = false
-          const updater = () => {
-            if (isMount) {
-              componentInstance.forceUpdate()
-              pending = false
-            } else {
-              pending = true
-            }
-          }
-          let unmap = model.observer.map(({path})=>{
-            if(path[0]==='_store' && path[1] in props) {
-              updater()
+      return props
+    }
+
+    var componentMap = {}
+    function getPathForComponent(route) {
+      const {path, component, api = []} = route
+      if(path in componentMap) {
+        return componentMap[path]
+      } else {
+        // const allApiNames = arrayUniq(arrayFlat(api.map(expandAPINameItem)))
+        const mapStateToProps = (state, ownProps) => {}
+        const mapDispatchToProps = (dispatch, ownProps) => {
+          const props = getAPIFromRoute(route)
+          Object.keys(props).map(name=>{
+            const service = props[name]
+            for(let name in service) {
+              const f = service[name]
+              if(typeof f === 'function') {
+                service[name] = function (...args) {
+                  const ret = f.apply(this, args)
+                  Promise.resolve(ret).then(()=>{
+                    dispatch({type: 'action'})
+                  })
+                  return ret
+                }
+              }
             }
           })
-          let oldComponentDidMount = (componentInstance.componentDidMount || noop).bind(componentInstance)
-          componentInstance.componentDidMount = function(){
-            oldComponentDidMount()
-            isMount = true
-            if (pending) {
-              updater()
-            }
-          }.bind(componentInstance)
-        } else {
-          const [_, updater] = useState()
-          useEffect(()=>{
-            return model.observer.map(({path})=>{
-              if(path[0]==='_store' && path[1] in props) {
-                updater(Date.now())
-              }
-            })
-          }, [])
+          return props
         }
+        return componentMap[path] = connect(mapStateToProps, mapDispatchToProps, null, {pure: false})(component)
       }
-      props.autoUpdate = bindComponentWithModel
-      return props
     }
 
     function RouteWithSubRoutes (route) {
@@ -176,14 +155,14 @@ export default class InitClass {
           strict={route.strict}
           render={props => {
             // console.log(props)
-            const childRoutes = route.routes || route.childRoutes
+            const childRoutes = route.routes || route.childRoutes || route.children
             props.location.query = qs.parse(props.location.search.slice(1))
+            const RouteComponent = getPathForComponent(route)
             return (
               // pass the sub-routes down to keep nesting
-              <route.component
+              <RouteComponent
                 {...props}
                 routeParams={props.match.params || {}}
-                {...getAPIFromRoute(route)}
                 model={subModule}
               >
                 <Switch>
@@ -200,7 +179,7 @@ export default class InitClass {
                       )
                     })}
                 </Switch>
-              </route.component>
+              </RouteComponent>
             )
           }}
         />
@@ -239,6 +218,37 @@ export default class InitClass {
       window.curHooksBranch = curHooksBranch = branch
       curLocation = location
     }
+
+    class App extends React.Component {
+      getChildContext = () => {
+        return {
+          router: {
+            ...history,
+            isActive(pathname) {
+              pathname = pathname.trim().replace(/\/$/, '')
+              return curHooksBranch.some((e)=> ((e.match||{}).path||'').indexOf(pathname) === 0 )
+            }
+          }
+        }
+      }
+      render () {
+        return (
+          <Provider store={store}>
+            <Router history={history}>
+              <Switch>
+                {routes.map((route, i) => (
+                  <RouteWithSubRoutes key={i} {...route} model={model} />
+                ))}
+              </Switch>
+            </Router>
+          </Provider>
+        )
+      }
+    }
+    App.childContextTypes = {
+      router: PropTypes.object
+    };
+    return App
   }
 }
 
@@ -277,7 +287,7 @@ function matchRoutes (routes, pathname, /* not public API */ options = {}) {
     if (match) {
       branch.push({ route, match })
 
-      const childRoutes = route.routes || route.childRoutes
+      const childRoutes = route.routes || route.childRoutes || route.children
       if (childRoutes) {
         matchRoutes(childRoutes, pathname, { branch, path: fullPath })
       }
