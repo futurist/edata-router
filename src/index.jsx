@@ -1,5 +1,5 @@
 
-import React, {useState, useEffect} from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import * as History from 'history'
 import {
@@ -13,8 +13,6 @@ import { makeAPI, initModel, noop } from './util'
 import matchPath from './match-path'
 import { Provider, connect } from 'react-redux'
 import { createStore } from 'redux'
-import arrayFlat from 'array-flatten'
-import arrayUniq from 'array-uniq'
 
 const createBrowserHistory = History.createHistory || History.createBrowserHistory
 const createHashHistory = History.createHashHistory
