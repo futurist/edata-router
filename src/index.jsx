@@ -65,7 +65,7 @@ export default class EdataRouterClass {
 
     computeLocationHooks(curLocation)
 
-    const allAPI = Object.keys(model.get(['_api']).value)
+    const allAPI = Object.keys((model.get(['_api']) || {}).value || {})
     const reducer = (state, action) =>{
       // console.log('reducer', store, action)
     }
@@ -95,7 +95,7 @@ export default class EdataRouterClass {
         names.filter(Boolean).forEach(name=>{
           const services = {}
           props[name] = services
-          const apiObj = model.get(['_api', name]).value
+          const apiObj = (model.get(['_api', name]) || {}).value || {}
           Object.keys(apiObj).forEach((key) => {
             services[key] = model.unwrap(['_api', name, key])
           })

@@ -10031,7 +10031,7 @@ function () {
         }
       });
       computeLocationHooks(curLocation);
-      var allAPI = Object.keys(model.get(['_api']).value);
+      var allAPI = Object.keys((model.get(['_api']) || {}).value || {});
 
       var reducer = function reducer(state, action) {// console.log('reducer', store, action)
       };
@@ -10068,7 +10068,7 @@ function () {
           names.filter(Boolean).forEach(function (name) {
             var services = {};
             props[name] = services;
-            var apiObj = model.get(['_api', name]).value;
+            var apiObj = (model.get(['_api', name]) || {}).value || {};
             Object.keys(apiObj).forEach(function (key) {
               services[key] = model.unwrap(['_api', name, key]);
             });
