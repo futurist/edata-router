@@ -1,3 +1,11 @@
+<a name="1.0.7"></a>
+## [1.0.7](/compare/1.0.6...1.0.7) (9/23/2019, 4:06:57 PM)
+
+- fix: model.get throw  [3635c3f](/commit/3635c3f)
+- update edata version, cleanup deps  [a660ee6](/commit/a660ee6)
+- update package.json  [49f9de8](/commit/49f9de8)
+
+
 <a name="1.0.6"></a>
 ## [1.0.6](/compare/1.0.5...1.0.6) (2019-8-29 17:04:49)
 
