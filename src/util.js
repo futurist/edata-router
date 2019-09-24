@@ -55,7 +55,6 @@ function defaultErrorHandler (err) {
     console.log('request aborted')
   }
   console.log(err)
-  throw err
 }
 
 function unwrapEData(edata) {
@@ -205,6 +204,23 @@ export function unwrapAPI (unwrapOptions = {}) {
               if(start) {
                 startPromise = start(store, init)
               }
+
+              const onFail = function (err) {
+                err.isTimeout = isTimeout
+                clearTimeout(timeoutId)
+                if (fail) {
+                  const ret = fail(store, err)
+                  return Promise.reject(ret).then(ret => {
+                    ret = Object.assign(store, ret)
+                    model.set(['_store', name], model.of(store))
+                    return err
+                  })
+                } else {
+                  const ret = errorHandler(err)
+                  return Promise.reject(ret == null ? err : ret)
+                }
+              }
+
               return Promise.resolve(startPromise).then(()=>{
                 let promise = mock
                   ? Promise.resolve(
@@ -239,13 +255,8 @@ export function unwrapAPI (unwrapOptions = {}) {
                       return res
                     })
                   })
-                  .catch(err => {
-                    err.isTimeout = isTimeout
-                    clearTimeout(timeoutId)
-                    fail && fail(err)
-                    errorHandler(err)
-                  })
-              })
+                  .catch(onFail)
+              }).catch(onFail)
             })
         }
       }

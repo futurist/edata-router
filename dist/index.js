@@ -7732,7 +7732,6 @@ function defaultErrorHandler(err) {
   }
 
   console.log(err);
-  throw err;
 }
 
 function unwrapEData(edata) {
@@ -7904,6 +7903,24 @@ function unwrapAPI() {
                 startPromise = start(store, init);
               }
 
+              var onFail = function onFail(err) {
+                err.isTimeout = isTimeout;
+                clearTimeout(timeoutId);
+
+                if (fail) {
+                  var ret = fail(store, err);
+                  return Promise.reject(ret).then(function (ret) {
+                    ret = Object.assign(store, ret);
+                    model.set(['_store', name], model.of(store));
+                    return err;
+                  });
+                } else {
+                  var _ret = errorHandler(err);
+
+                  return Promise.reject(_ret == null ? err : _ret);
+                }
+              };
+
               return Promise.resolve(startPromise).then(function () {
                 var promise = mock ? Promise.resolve(typeof mock === 'function' ? mock() : mock instanceof Response ? mock : new Response(is_plain_obj_default()(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock)) : abortableFetch(url, init); // console.error(url, init);
 
@@ -7921,13 +7938,8 @@ function unwrapAPI() {
                   }).then(function () {
                     return res;
                   });
-                })["catch"](function (err) {
-                  err.isTimeout = isTimeout;
-                  clearTimeout(timeoutId);
-                  fail && fail(err);
-                  errorHandler(err);
-                });
-              });
+                })["catch"](onFail);
+              })["catch"](onFail);
             });
           };
         }
