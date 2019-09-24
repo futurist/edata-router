@@ -7831,9 +7831,13 @@ function unwrapAPI() {
               var onSuccess = function onSuccess(args) {
                 if (success) {
                   var ret = success(store, args);
-                  ret = Object.assign(store, ret);
-                  model.set(['_store', name], model.of(store));
-                  return ret;
+                  return Promise.resolve(ret).then(function (ret) {
+                    ret = Object.assign(store, ret);
+                    model.set(['_store', name], model.of(store));
+                    return ret;
+                  });
+                } else {
+                  return Promise.resolve(store);
                 }
               };
 
@@ -7894,31 +7898,35 @@ function unwrapAPI() {
 
               var start = callback && callback.start || reducer && reducer.start;
               var fail = callback && callback.fail || reducer && reducer.fail;
+              var startPromise;
 
               if (start) {
-                start(store, init);
+                startPromise = start(store, init);
               }
 
-              var promise = mock ? Promise.resolve(typeof mock === 'function' ? mock() : mock instanceof Response ? mock : new Response(is_plain_obj_default()(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock)) : abortableFetch(url, init); // console.error(url, init);
+              return Promise.resolve(startPromise).then(function () {
+                var promise = mock ? Promise.resolve(typeof mock === 'function' ? mock() : mock instanceof Response ? mock : new Response(is_plain_obj_default()(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock)) : abortableFetch(url, init); // console.error(url, init);
 
-              return Promise.race([timeoutPromise, promise]).then(function () {
-                clearTimeout(timeoutId);
-                return promise;
-              }).then(checkStatus).then(beforeResponse).then(function (res) {
-                res = afterResponse(res); // console.log('res', res, success, service, actions[service]);
+                return Promise.race([timeoutPromise, Promise.resolve(startPromise).then(promise)]).then(function () {
+                  clearTimeout(timeoutId);
+                  return promise;
+                }).then(checkStatus).then(beforeResponse).then(function (res) {
+                  res = afterResponse(res); // console.log('res', res, success, service, actions[service]);
 
-                onSuccess({
-                  data: res,
-                  urlParam: urlParam,
-                  param: query,
-                  headerParam: init.headers
+                  return onSuccess({
+                    data: res,
+                    urlParam: urlParam,
+                    param: query,
+                    headerParam: init.headers
+                  }).then(function () {
+                    return res;
+                  });
+                })["catch"](function (err) {
+                  err.isTimeout = isTimeout;
+                  clearTimeout(timeoutId);
+                  fail && fail(err);
+                  errorHandler(err);
                 });
-                return res;
-              })["catch"](function (err) {
-                err.isTimeout = isTimeout;
-                clearTimeout(timeoutId);
-                fail && fail(err);
-                errorHandler(err);
               });
             });
           };

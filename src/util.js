@@ -140,9 +140,13 @@ export function unwrapAPI (unwrapOptions = {}) {
               const onSuccess = (args)=>{
                 if (success) {
                   let ret = success(store, args)
-                  ret = Object.assign(store, ret)
-                  model.set(['_store', name], model.of(store))
-                  return ret
+                  return Promise.resolve(ret).then((ret)=>{
+                    ret = Object.assign(store, ret)
+                    model.set(['_store', name], model.of(store))
+                    return ret
+                  })
+                } else {
+                  return Promise.resolve(store)
                 }
               }
               if(!exec.url) {
@@ -197,47 +201,51 @@ export function unwrapAPI (unwrapOptions = {}) {
               }
               const start = callback && callback.start || reducer && reducer.start
               const fail = callback && callback.fail || reducer && reducer.fail
+              let startPromise
               if(start) {
-                start(store, init)
+                startPromise = start(store, init)
               }
-              let promise = mock
-                ? Promise.resolve(
-                  typeof mock === 'function'
-                    ? mock()
-                    : mock instanceof Response
-                      ? mock
-                      : new Response(
-                        isPOJO(mock) || Array.isArray(mock)
-                          ? JSON.stringify(mock)
-                          : mock
-                      )
-                )
-                : abortableFetch(url, init);
-              // console.error(url, init);
-              return Promise.race([timeoutPromise, promise])
-                .then(() => {
-                  clearTimeout(timeoutId)
-                  return promise
-                })
-                .then(checkStatus)
-                .then(beforeResponse)
-                .then(res => {
-                  res = afterResponse(res)
-                  // console.log('res', res, success, service, actions[service]);
-                  onSuccess({
-                    data: res,
-                    urlParam,
-                    param: query,
-                    headerParam: init.headers
+              return Promise.resolve(startPromise).then(()=>{
+                let promise = mock
+                  ? Promise.resolve(
+                    typeof mock === 'function'
+                      ? mock()
+                      : mock instanceof Response
+                        ? mock
+                        : new Response(
+                          isPOJO(mock) || Array.isArray(mock)
+                            ? JSON.stringify(mock)
+                            : mock
+                        )
+                  )
+                  : abortableFetch(url, init);
+                // console.error(url, init);
+                return Promise.race([timeoutPromise, Promise.resolve(startPromise).then(promise)])
+                  .then(() => {
+                    clearTimeout(timeoutId)
+                    return promise
                   })
-                  return res
-                })
-                .catch(err => {
-                  err.isTimeout = isTimeout
-                  clearTimeout(timeoutId)
-                  fail && fail(err)
-                  errorHandler(err)
-                })
+                  .then(checkStatus)
+                  .then(beforeResponse)
+                  .then(res => {
+                    res = afterResponse(res)
+                    // console.log('res', res, success, service, actions[service]);
+                    return onSuccess({
+                      data: res,
+                      urlParam,
+                      param: query,
+                      headerParam: init.headers
+                    }).then(()=>{
+                      return res
+                    })
+                  })
+                  .catch(err => {
+                    err.isTimeout = isTimeout
+                    clearTimeout(timeoutId)
+                    fail && fail(err)
+                    errorHandler(err)
+                  })
+              })
             })
         }
       }
