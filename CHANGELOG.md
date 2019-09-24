@@ -1,3 +1,12 @@
+<a name="v1.1.1"></a>
+## [v1.1.1](/compare/1.0.7...v1.1.1) (2019-9-24 13:52:06)
+
+- feat(callback): fail can be promise  [ae1c680](/commit/ae1c680)
+- feat(callback): start && success can be promise  [cd234e6](/commit/cd234e6)
+- 1.1.0  [13248ff](/commit/13248ff)
+- fix: apiConfig empty bug  [885a5cc](/commit/885a5cc)
+
+
 <a name="1.0.7"></a>
 ## [1.0.7](/compare/1.0.6...1.0.7) (9/23/2019, 4:06:57 PM)
 
