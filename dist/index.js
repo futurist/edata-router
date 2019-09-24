@@ -7805,16 +7805,17 @@ function unwrapAPI() {
               var actions = model.unwrap(['_actions', name]) || {};
               var store = model.unwrap(['_store', name]) || {};
 
-              var _ajaxSetting = _objectSpread({}, ajaxSetting, {}, actions[service] || {}),
-                  exec = _ajaxSetting.exec,
-                  reducer = _ajaxSetting.reducer,
-                  callback = _ajaxSetting.callback,
-                  timeout = _ajaxSetting.timeout,
-                  headers = _ajaxSetting.headers,
-                  checkStatus = _ajaxSetting.checkStatus,
-                  beforeResponse = _ajaxSetting.beforeResponse,
-                  afterResponse = _ajaxSetting.afterResponse,
-                  errorHandler = _ajaxSetting.errorHandler;
+              var actionConfig = _objectSpread({}, ajaxSetting, {}, actions[service] || {});
+
+              var exec = actionConfig.exec,
+                  reducer = actionConfig.reducer,
+                  callback = actionConfig.callback,
+                  timeout = actionConfig.timeout,
+                  headers = actionConfig.headers,
+                  checkStatus = actionConfig.checkStatus,
+                  beforeResponse = actionConfig.beforeResponse,
+                  afterResponse = actionConfig.afterResponse,
+                  errorHandler = actionConfig.errorHandler;
 
               if (typeof exec === 'string') {
                 exec = model.unwrap(['_api', name, exec], {
@@ -7824,7 +7825,7 @@ function unwrapAPI() {
                 });
               }
 
-              if (!exec) exec = apiConfig;
+              if (!exec) exec = _objectSpread({}, actionConfig, {}, apiConfig);
               var success = callback && callback.success || reducer && reducer.success || callback || reducer;
 
               var onSuccess = function onSuccess(args) {

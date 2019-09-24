@@ -115,6 +115,7 @@ export function unwrapAPI (unwrapOptions = {}) {
               options = options || {}
               const actions = model.unwrap(['_actions', name]) || {}
               const store = model.unwrap(['_store', name]) || {}
+              const actionConfig = { ...ajaxSetting, ...(actions[service] || {}) }
               let {
                 exec,
                 reducer,
@@ -125,13 +126,13 @@ export function unwrapAPI (unwrapOptions = {}) {
                 beforeResponse,
                 afterResponse,
                 errorHandler
-              } = { ...ajaxSetting, ...(actions[service] || {}) }
+              } = actionConfig
               if (typeof exec === 'string') {
                 exec = model.unwrap(['_api', name, exec], {
                   map: v => v
                 })
               }
-              if (!exec) exec = apiConfig
+              if (!exec) exec = {...actionConfig, ...apiConfig}
               const success = (callback && callback.success) ||
                     (reducer && reducer.success) ||
                     callback ||

@@ -36,11 +36,11 @@
     "path-to-regexp": "^3.0.0",
     "prop-types": "^15.7.2",
     "qs": "^6.8.0",
-    "webpack": "^4.39.2",
-    "webpack-cli": "^3.3.7",
-    "whatwg-fetch": "^3.0.0",
     "react-redux": "^7.1.1",
-    "redux": "^4.0.4"
+    "redux": "^4.0.4",
+    "webpack": "^4.39.2",
+    "webpack-cli": "^3.3.9",
+    "whatwg-fetch": "^3.0.0"
   },
   "dependencies": {}
 }
