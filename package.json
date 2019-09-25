@@ -38,6 +38,7 @@
     "qs": "^6.8.0",
     "react-redux": "^7.1.1",
     "redux": "^4.0.4",
+    "url-polyfill": "^1.1.7",
     "webpack": "^4.39.2",
     "webpack-cli": "^3.3.9",
     "whatwg-fetch": "^3.0.0"

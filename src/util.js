@@ -5,6 +5,7 @@ import edata, { EdataBaseClass } from 'edata'
 import isPOJO from 'is-plain-obj'
 import pathToRegexp from 'path-to-regexp'
 
+import 'url-polyfill'
 import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only'
 import { fetch } from 'whatwg-fetch'
 
@@ -96,6 +97,7 @@ export function initModel (config, unwrapOptions) {
   })
 }
 
+const fakeDomain = 'http://0.0.0.0'
 export function unwrapAPI (unwrapOptions = {}) {
   const {paramStyle, queryKey, mockKey} = unwrapOptions
   const ajaxSetting = {...globalAjaxSetting, ...unwrapOptions.ajaxSetting}
@@ -160,7 +162,12 @@ export function unwrapAPI (unwrapOptions = {}) {
               const method = String(exec.method || 'get').toUpperCase()
               const hasBody = /PUT|POST|PATCH/.test(method)
               const urlParam = paramStyle === 'beatle' ? options.params : options
-              let url = replaceParams(exec.url, ...paramStyle === 'beatle' ? [options.params, options.options] : [options])
+              const urlObj = new URL(exec.url, fakeDomain)
+              urlObj.pathname = replaceParams(urlObj.pathname, ...paramStyle === 'beatle' ? [options.params, options.options] : [options])
+              let url = urlObj.toString()
+              if(url.indexOf(fakeDomain) === 0) {
+                url = url.slice(fakeDomain.length)
+              }
               query = {...param, ...query};
               if (!hasBody && !isEmpty(query)) {
                 url = url + '?' + qs.stringify(query)
