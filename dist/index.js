@@ -8390,8 +8390,7 @@ function unwrapAPI() {
 
               var init = _objectSpread({
                 method: method,
-                signal: controller.signal,
-                credentials: 'same-origin'
+                signal: controller.signal
               }, exec, {
                 headers: _objectSpread({}, headers, {}, exec.headers, {}, window.ajaxHeader),
                 body: hasBody ? JSON.stringify(query) : undefined
@@ -8405,13 +8404,15 @@ function unwrapAPI() {
                 startPromise = start(store, init);
               }
 
-              var onFail = function onFail(err) {
+              var onFail = function onFail() {
+                var err = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Error();
                 err.isTimeout = isTimeout;
+                err.init = init;
                 clearTimeout(timeoutId);
 
                 if (fail) {
                   var ret = fail(store, err);
-                  return Promise.reject(ret).then(function (ret) {
+                  return Promise.resolve(ret).then(function (ret) {
                     ret = Object.assign(store, ret);
                     model.set(['_store', name], model.of(store));
                     return err;

@@ -195,7 +195,6 @@ export function unwrapAPI (unwrapOptions = {}) {
               let init = {
                 method,
                 signal: controller.signal,
-                credentials: 'same-origin',
                 ...exec,
                 headers: {
                   ...headers,
@@ -212,12 +211,13 @@ export function unwrapAPI (unwrapOptions = {}) {
                 startPromise = start(store, init)
               }
 
-              const onFail = function (err) {
+              const onFail = function (err = new Error()) {
                 err.isTimeout = isTimeout
+                err.init = init
                 clearTimeout(timeoutId)
                 if (fail) {
                   const ret = fail(store, err)
-                  return Promise.reject(ret).then(ret => {
+                  return Promise.resolve(ret).then(ret => {
                     ret = Object.assign(store, ret)
                     model.set(['_store', name], model.of(store))
                     return err
