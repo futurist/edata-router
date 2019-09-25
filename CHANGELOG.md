@@ -1,3 +1,9 @@
+<a name="v1.1.2"></a>
+## [v1.1.2](/compare/v1.1.1...v1.1.2) (2019-9-25 18:15:14)
+
+- fix: exec.url domain port bug  [1bc5cf8](/commit/1bc5cf8)
+
+
 <a name="v1.1.1"></a>
 ## [v1.1.1](/compare/1.0.7...v1.1.1) (2019-9-24 13:52:06)
 
