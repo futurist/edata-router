@@ -8331,7 +8331,7 @@ function unwrapAPI() {
                     return ret;
                   });
                 } else {
-                  return Promise.resolve(store);
+                  return Promise.resolve(args);
                 }
               };
 
@@ -8409,18 +8409,17 @@ function unwrapAPI() {
                 err.isTimeout = isTimeout;
                 err.init = init;
                 clearTimeout(timeoutId);
+                errorHandler(err);
 
                 if (fail) {
                   var ret = fail(store, err);
                   return Promise.resolve(ret).then(function (ret) {
                     ret = Object.assign(store, ret);
                     model.set(['_store', name], model.of(store));
-                    return err;
+                    return ret;
                   });
                 } else {
-                  var _ret = errorHandler(err);
-
-                  return Promise.reject(_ret == null ? err : _ret);
+                  return Promise.reject(err);
                 }
               };
 
@@ -8431,7 +8430,7 @@ function unwrapAPI() {
                   clearTimeout(timeoutId);
                   return promise;
                 }).then(checkStatus).then(beforeResponse).then(function (res) {
-                  res = afterResponse(res); // console.log('res', res, success, service, actions[service]);
+                  afterResponse(res); // console.log('res', res, success, service, actions[service]);
 
                   return onSuccess({
                     data: res,

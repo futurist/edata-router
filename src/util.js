@@ -147,7 +147,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                     return ret
                   })
                 } else {
-                  return Promise.resolve(store)
+                  return Promise.resolve(args)
                 }
               }
               if(!exec.url) {
@@ -215,16 +215,16 @@ export function unwrapAPI (unwrapOptions = {}) {
                 err.isTimeout = isTimeout
                 err.init = init
                 clearTimeout(timeoutId)
+                errorHandler(err)
                 if (fail) {
                   const ret = fail(store, err)
                   return Promise.resolve(ret).then(ret => {
                     ret = Object.assign(store, ret)
                     model.set(['_store', name], model.of(store))
-                    return err
+                    return ret
                   })
                 } else {
-                  const ret = errorHandler(err)
-                  return Promise.reject(ret == null ? err : ret)
+                  return Promise.reject(err)
                 }
               }
 
@@ -251,7 +251,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                   .then(checkStatus)
                   .then(beforeResponse)
                   .then(res => {
-                    res = afterResponse(res)
+                    afterResponse(res)
                     // console.log('res', res, success, service, actions[service]);
                     return onSuccess({
                       data: res,
