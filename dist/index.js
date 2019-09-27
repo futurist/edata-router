@@ -8181,7 +8181,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
-function noop() {} // use native browser implementation if it supports aborting
+function noop() {}
+function isFunction(e) {
+  return typeof e === 'function';
+} // use native browser implementation if it supports aborting
 
 var abortableFetch = 'signal' in new Request('') ? window.fetch : fetch;
 var defaultHeaders = {
@@ -8189,9 +8192,10 @@ var defaultHeaders = {
 };
 var globalAjaxSetting = {
   headers: defaultHeaders,
+  beforeRequest: identity,
   checkStatus: defaultCheckStatus,
-  beforeResponse: defaultBeforeResponse,
-  afterResponse: defaultAfterResponse,
+  getResponse: defaultGetResponse,
+  afterResponse: identity,
   errorHandler: defaultErrorHandler
 };
 var defaultReplaceParams = {
@@ -8203,7 +8207,7 @@ function replaceParams(url, params, options) {
 }
 
 function defaultCheckStatus(response) {
-  if (response.status >= 200 && response.status < 300 || response.status == 304) {
+  if (response.status < 300 || response.status == 304) {
     return response;
   } else {
     var error = new Error(response.statusText);
@@ -8212,11 +8216,11 @@ function defaultCheckStatus(response) {
   }
 }
 
-function defaultBeforeResponse(response) {
+function defaultGetResponse(response) {
   return response.json();
 }
 
-function defaultAfterResponse(res) {
+function identity(res) {
   return res;
 }
 
@@ -8294,7 +8298,7 @@ function unwrapAPI() {
         map: function map(apiConfig) {
           return function (query) {
             var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-            return Promise.resolve(typeof apiConfig === 'function' ? apiConfig() : apiConfig).then(function (apiConfig) {
+            return Promise.resolve(isFunction(apiConfig) ? apiConfig() : apiConfig).then(function (apiConfig) {
               options = options || {};
               var actions = model.unwrap(['_actions', name]) || {};
               var store = model.unwrap(['_store', name]) || {};
@@ -8306,8 +8310,9 @@ function unwrapAPI() {
                   callback = actionConfig.callback,
                   timeout = actionConfig.timeout,
                   headers = actionConfig.headers,
+                  beforeRequest = actionConfig.beforeRequest,
                   checkStatus = actionConfig.checkStatus,
-                  beforeResponse = actionConfig.beforeResponse,
+                  getResponse = actionConfig.getResponse,
                   afterResponse = actionConfig.afterResponse,
                   errorHandler = actionConfig.errorHandler;
 
@@ -8325,6 +8330,11 @@ function unwrapAPI() {
               var onSuccess = function onSuccess(args) {
                 if (success) {
                   var ret = success(store, args);
+
+                  if (ret === false) {
+                    return Promise.resolve(args);
+                  }
+
                   return Promise.resolve(ret).then(function (ret) {
                     ret = Object.assign(store, ret);
                     model.set(['_store', name], model.of(store));
@@ -8344,7 +8354,7 @@ function unwrapAPI() {
               var mock = exec[mockKey];
               var param = exec[queryKey];
 
-              if (typeof param === 'function') {
+              if (isFunction(param)) {
                 param = param();
               } // console.log(exec, reducer)
 
@@ -8396,6 +8406,7 @@ function unwrapAPI() {
                 body: hasBody ? JSON.stringify(query) : undefined
               }, options);
 
+              beforeRequest(init);
               var start = callback && callback.start || reducer && reducer.start;
               var fail = callback && callback.fail || reducer && reducer.fail;
               var startPromise;
@@ -8409,10 +8420,15 @@ function unwrapAPI() {
                 err.isTimeout = isTimeout;
                 err.init = init;
                 clearTimeout(timeoutId);
-                errorHandler(err);
+                isFunction(errorHandler) && errorHandler(err);
 
                 if (fail) {
                   var ret = fail(store, err);
+
+                  if (ret === false) {
+                    return Promise.reject(err);
+                  }
+
                   return Promise.resolve(ret).then(function (ret) {
                     ret = Object.assign(store, ret);
                     model.set(['_store', name], model.of(store));
@@ -8424,12 +8440,15 @@ function unwrapAPI() {
               };
 
               return Promise.resolve(startPromise).then(function () {
-                var promise = mock ? Promise.resolve(typeof mock === 'function' ? mock() : mock instanceof Response ? mock : new Response(is_plain_obj_default()(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock)) : abortableFetch(url, init); // console.error(url, init);
+                var promise = mock ? Promise.resolve(isFunction(mock) ? mock() : mock instanceof Response ? mock : new Response(is_plain_obj_default()(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock)) : abortableFetch(url, init); // console.error(url, init);
 
-                return Promise.race([timeoutPromise, Promise.resolve(startPromise).then(promise)]).then(function () {
+                return Promise.race([timeoutPromise, promise]).then(function () {
                   clearTimeout(timeoutId);
                   return promise;
-                }).then(checkStatus).then(beforeResponse).then(function (res) {
+                }).then(function (res) {
+                  isFunction(checkStatus) && checkStatus(res);
+                  return res;
+                }).then(getResponse).then(function (res) {
                   afterResponse(res); // console.log('res', res, success, service, actions[service]);
 
                   return onSuccess({

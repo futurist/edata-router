@@ -10,6 +10,11 @@ import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only'
 import { fetch } from 'whatwg-fetch'
 
 export function noop(){}
+
+export function isFunction(e) {
+  return typeof e === 'function'
+}
+
 // use native browser implementation if it supports aborting
 const abortableFetch = 'signal' in new Request('') ? window.fetch : fetch
 
@@ -19,9 +24,10 @@ const defaultHeaders = {
 
 export const globalAjaxSetting = {
   headers: defaultHeaders,
+  beforeRequest: identity,
   checkStatus: defaultCheckStatus,
-  beforeResponse: defaultBeforeResponse,
-  afterResponse: defaultAfterResponse,
+  getResponse: defaultGetResponse,
+  afterResponse: identity,
   errorHandler: defaultErrorHandler
 }
 
@@ -32,7 +38,7 @@ function replaceParams (url, params, options) {
 
 function defaultCheckStatus (response) {
   if (
-    (response.status >= 200 && response.status < 300) ||
+    response.status < 300 ||
     response.status == 304
   ) {
     return response
@@ -43,12 +49,12 @@ function defaultCheckStatus (response) {
   }
 }
 
-function defaultBeforeResponse (response) {
+function defaultGetResponse (response) {
   return response.json()
 }
 
-function defaultAfterResponse (res) {
-  return res;
+function identity (res) {
+  return res
 }
 
 function defaultErrorHandler (err) {
@@ -111,7 +117,7 @@ export function unwrapAPI (unwrapOptions = {}) {
         map: apiConfig => {
           return (query, options = {}) =>
             Promise.resolve(
-              typeof apiConfig === 'function' ? apiConfig() : apiConfig
+              isFunction(apiConfig) ? apiConfig() : apiConfig
             ).then(apiConfig => {
               options = options || {}
               const actions = model.unwrap(['_actions', name]) || {}
@@ -123,8 +129,9 @@ export function unwrapAPI (unwrapOptions = {}) {
                 callback,
                 timeout,
                 headers,
+                beforeRequest,
                 checkStatus,
-                beforeResponse,
+                getResponse,
                 afterResponse,
                 errorHandler
               } = actionConfig
@@ -134,13 +141,16 @@ export function unwrapAPI (unwrapOptions = {}) {
                 })
               }
               if (!exec) exec = {...actionConfig, ...apiConfig}
-              const success = (callback && callback.success) ||
-                    (reducer && reducer.success) ||
+              const success = callback && callback.success ||
+                    reducer && reducer.success ||
                     callback ||
                     reducer
               const onSuccess = (args)=>{
                 if (success) {
                   let ret = success(store, args)
+                  if(ret === false) {
+                    return Promise.resolve(args)
+                  }
                   return Promise.resolve(ret).then((ret)=>{
                     ret = Object.assign(store, ret)
                     model.set(['_store', name], model.of(store))
@@ -155,7 +165,7 @@ export function unwrapAPI (unwrapOptions = {}) {
               }
               let mock = exec[mockKey]
               let param = exec[queryKey]
-              if(typeof param==='function') {
+              if (isFunction(param)) {
                 param = param()
               }
               // console.log(exec, reducer)
@@ -204,6 +214,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                 body: hasBody ? JSON.stringify(query) : undefined,
                 ...options
               }
+              beforeRequest(init)
               const start = callback && callback.start || reducer && reducer.start
               const fail = callback && callback.fail || reducer && reducer.fail
               let startPromise
@@ -215,9 +226,12 @@ export function unwrapAPI (unwrapOptions = {}) {
                 err.isTimeout = isTimeout
                 err.init = init
                 clearTimeout(timeoutId)
-                errorHandler(err)
+                isFunction(errorHandler) && errorHandler(err)
                 if (fail) {
                   const ret = fail(store, err)
+                  if(ret === false) {
+                    return Promise.reject(err)
+                  }
                   return Promise.resolve(ret).then(ret => {
                     ret = Object.assign(store, ret)
                     model.set(['_store', name], model.of(store))
@@ -231,7 +245,7 @@ export function unwrapAPI (unwrapOptions = {}) {
               return Promise.resolve(startPromise).then(()=>{
                 let promise = mock
                   ? Promise.resolve(
-                    typeof mock === 'function'
+                    isFunction(mock)
                       ? mock()
                       : mock instanceof Response
                         ? mock
@@ -243,13 +257,16 @@ export function unwrapAPI (unwrapOptions = {}) {
                   )
                   : abortableFetch(url, init);
                 // console.error(url, init);
-                return Promise.race([timeoutPromise, Promise.resolve(startPromise).then(promise)])
+                return Promise.race([timeoutPromise, promise])
                   .then(() => {
                     clearTimeout(timeoutId)
                     return promise
                   })
-                  .then(checkStatus)
-                  .then(beforeResponse)
+                  .then(res => {
+                    isFunction(checkStatus) && checkStatus(res)
+                    return res
+                  })
+                  .then(getResponse)
                   .then(res => {
                     afterResponse(res)
                     // console.log('res', res, success, service, actions[service]);

@@ -23,11 +23,20 @@ models/           # 接口定义(url, method等)
 import React from 'react'
 import {render} from 'react-dom'
 import EdataRouter from 'edata-router'
-const app = new EdataRouter({})
+const app = new EdataRouter({
+  ajaxSetting: {
+    headers: {},
+    beforeRequest: (init)=>{},
+    checkStatus: (res)=>{},
+    getResponse: (res)=>{},
+    afterResponse: (res)=>{},
+    errorHandler: (err)=>{}
+  }
+})
 
 // 导入接口配置
-app.model(actions1, models1)
-app.model(actions2, models2)
+app.model(actions1, models1?)
+app.model(actions2, models2?)
 ... ...
 
 // 设置路由
@@ -72,8 +81,9 @@ this.props.products.getList(query, {
   }
 })
 
+this.props.products.store   // store是action中定义的那个对象
+
 this.props.model  // model是一个edata
-this.props.store.{products/users}   // store是action中定义的那个对象
 this.props.routeParams  // 对应于 props.match.params
 this.props.history
 this.props.location
@@ -93,7 +103,7 @@ module.exports = {
     actions: {
         getList: {
             callback: {
-                start: function (store, url, init) {
+                start: function (store, init) {
                 },
                 success: function (store, result) {
                 },
