@@ -142,7 +142,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                 afterResponse,
                 errorHandler
               } = actionConfig
-              let host = actionConfig.host || actions.host
+              let base = actionConfig.base || actions.base
               if (typeof exec === 'string') {
                 exec = model.unwrap(['_api', name, exec], {
                   map: v => v
@@ -186,8 +186,8 @@ export function unwrapAPI (unwrapOptions = {}) {
               if(url.indexOf(fakeDomain) === 0) {
                 url = url.slice(fakeDomain.length)
               }
-              if (host) {
-                url = joinPath(host + '', url)
+              if (base) {
+                url = joinPath(base + '', url)
               }
               query = {...param, ...query};
               if (!hasBody && !isEmpty(query)) {

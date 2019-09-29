@@ -8321,7 +8321,7 @@ function unwrapAPI() {
                   getResponse = actionConfig.getResponse,
                   afterResponse = actionConfig.afterResponse,
                   errorHandler = actionConfig.errorHandler;
-              var host = actionConfig.host || actions.host;
+              var base = actionConfig.base || actions.base;
 
               if (typeof exec === 'string') {
                 exec = model.unwrap(['_api', name, exec], {
@@ -8377,8 +8377,8 @@ function unwrapAPI() {
                 url = url.slice(fakeDomain.length);
               }
 
-              if (host) {
-                url = joinPath(host + '', url);
+              if (base) {
+                url = joinPath(base + '', url);
               }
 
               query = _objectSpread({}, param, {}, query);
