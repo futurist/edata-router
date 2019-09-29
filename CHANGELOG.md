@@ -1,3 +1,10 @@
+<a name="v1.1.8"></a>
+## [v1.1.8](/compare/v1.1.7...v1.1.8) (2019-9-29 11:00:12)
+
+- add debug mode  [4ef05f6](/commit/4ef05f6)
+- fix: base will ignore http:// prefix  [fcde8a9](/commit/fcde8a9)
+
+
 <a name="v1.1.7"></a>
 ## [v1.1.7](/compare/v1.1.6...v1.1.7) (2019-9-29 10:29:34)
 
