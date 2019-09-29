@@ -35,7 +35,7 @@ export const globalAjaxSetting = {
   checkStatus: defaultCheckStatus,
   getResponse: defaultGetResponse,
   afterResponse: identity,
-  errorHandler: defaultErrorHandler
+  errorHandler: null
 }
 
 const defaultReplaceParams = { encode: noop }
@@ -64,7 +64,7 @@ function identity (res) {
   return res
 }
 
-function defaultErrorHandler (err) {
+function debugErrorHandler (err) {
   if (err.name === 'AbortError') {
     console.log('request aborted')
   }
@@ -114,7 +114,7 @@ const REGEX_HTTP_PROTOCOL = /^(https?:)?\/\//i
 
 const fakeDomain = 'http://0.0.0.0'
 export function unwrapAPI (unwrapOptions = {}) {
-  const {paramStyle, queryKey, mockKey} = unwrapOptions
+  const {paramStyle, queryKey, mockKey, debug} = unwrapOptions
   const ajaxSetting = {...globalAjaxSetting, ...unwrapOptions.ajaxSetting}
   return packer => {
     if (!packer) return
@@ -145,6 +145,9 @@ export function unwrapAPI (unwrapOptions = {}) {
                 errorHandler
               } = actionConfig
               let base = actionConfig.base || actions.base
+              if(debug && !errorHandler) {
+                errorHandler = debugErrorHandler
+              }
               if (typeof exec === 'string') {
                 exec = model.unwrap(['_api', name, exec], {
                   map: v => v
@@ -178,7 +181,6 @@ export function unwrapAPI (unwrapOptions = {}) {
               if (isFunction(param)) {
                 param = param()
               }
-              // console.log(exec, reducer)
               const method = String(exec.method || 'get').toUpperCase()
               const hasBody = /PUT|POST|PATCH/.test(method)
               const urlParam = paramStyle === 'beatle' ? options.params : options
@@ -282,7 +284,6 @@ export function unwrapAPI (unwrapOptions = {}) {
                   .then(getResponse)
                   .then(res => {
                     afterResponse(res)
-                    // console.log('res', res, success, service, actions[service])
                     return onSuccess({
                       data: res,
                       urlParam,

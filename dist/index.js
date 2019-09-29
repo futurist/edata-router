@@ -8202,7 +8202,7 @@ var globalAjaxSetting = {
   checkStatus: defaultCheckStatus,
   getResponse: defaultGetResponse,
   afterResponse: identity,
-  errorHandler: defaultErrorHandler
+  errorHandler: null
 };
 var defaultReplaceParams = {
   encode: noop
@@ -8230,7 +8230,7 @@ function identity(res) {
   return res;
 }
 
-function defaultErrorHandler(err) {
+function debugErrorHandler(err) {
   if (err.name === 'AbortError') {
     console.log('request aborted');
   }
@@ -8285,7 +8285,8 @@ function unwrapAPI() {
   var unwrapOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   var paramStyle = unwrapOptions.paramStyle,
       queryKey = unwrapOptions.queryKey,
-      mockKey = unwrapOptions.mockKey;
+      mockKey = unwrapOptions.mockKey,
+      debug = unwrapOptions.debug;
 
   var ajaxSetting = _objectSpread({}, globalAjaxSetting, {}, unwrapOptions.ajaxSetting);
 
@@ -8323,6 +8324,10 @@ function unwrapAPI() {
                   afterResponse = actionConfig.afterResponse,
                   errorHandler = actionConfig.errorHandler;
               var base = actionConfig.base || actions.base;
+
+              if (debug && !errorHandler) {
+                errorHandler = debugErrorHandler;
+              }
 
               if (typeof exec === 'string') {
                 exec = model.unwrap(['_api', name, exec], {
@@ -8364,8 +8369,7 @@ function unwrapAPI() {
 
               if (isFunction(param)) {
                 param = param();
-              } // console.log(exec, reducer)
-
+              }
 
               var method = String(exec.method || 'get').toUpperCase();
               var hasBody = /PUT|POST|PATCH/.test(method);
@@ -8461,8 +8465,7 @@ function unwrapAPI() {
                   isFunction(checkStatus) && checkStatus(res);
                   return res;
                 }).then(getResponse).then(function (res) {
-                  afterResponse(res); // console.log('res', res, success, service, actions[service])
-
+                  afterResponse(res);
                   return onSuccess({
                     data: res,
                     urlParam: urlParam,
@@ -10523,6 +10526,8 @@ function () {
         _ref$initData = _ref.initData,
         initData = _ref$initData === void 0 ? {} : _ref$initData,
         name = _ref.name,
+        _ref$debug = _ref.debug,
+        debug = _ref$debug === void 0 ? false : _ref$debug,
         _ref$routeMode = _ref.routeMode,
         routeMode = _ref$routeMode === void 0 ? '' : _ref$routeMode,
         _ref$paramStyle = _ref.paramStyle,
@@ -10541,6 +10546,7 @@ function () {
     this.routeMode = routeMode;
     this.makeModel = initModel(edataConfig, {
       ajaxSetting: ajaxSetting,
+      debug: debug,
       paramStyle: paramStyle,
       queryKey: queryKey,
       mockKey: mockKey
