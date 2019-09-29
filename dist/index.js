@@ -8279,6 +8279,7 @@ function initModel(config, unwrapOptions) {
     }, config));
   };
 }
+var REGEX_HTTP_PROTOCOL = /^(https?:)?\/\//i;
 var fakeDomain = 'http://0.0.0.0';
 function unwrapAPI() {
   var unwrapOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -8377,7 +8378,7 @@ function unwrapAPI() {
                 url = url.slice(fakeDomain.length);
               }
 
-              if (base) {
+              if (base && !REGEX_HTTP_PROTOCOL.test(url)) {
                 url = joinPath(base + '', url);
               }
 
@@ -8451,7 +8452,7 @@ function unwrapAPI() {
               };
 
               return Promise.resolve(startPromise).then(function () {
-                var promise = mock ? Promise.resolve(isFunction(mock) ? mock() : mock instanceof Response ? mock : new Response(is_plain_obj_default()(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock)) : abortableFetch(url, init); // console.error(url, init);
+                var promise = mock ? Promise.resolve(isFunction(mock) ? mock() : mock instanceof Response ? mock : new Response(is_plain_obj_default()(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock)) : abortableFetch(url, init); // console.error(url, init)
 
                 return Promise.race([timeoutPromise, promise]).then(function () {
                   clearTimeout(timeoutId);
@@ -8460,7 +8461,7 @@ function unwrapAPI() {
                   isFunction(checkStatus) && checkStatus(res);
                   return res;
                 }).then(getResponse).then(function (res) {
-                  afterResponse(res); // console.log('res', res, success, service, actions[service]);
+                  afterResponse(res); // console.log('res', res, success, service, actions[service])
 
                   return onSuccess({
                     data: res,

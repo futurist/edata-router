@@ -110,6 +110,8 @@ export function initModel (config, unwrapOptions) {
   })
 }
 
+const REGEX_HTTP_PROTOCOL = /^(https?:)?\/\//i
+
 const fakeDomain = 'http://0.0.0.0'
 export function unwrapAPI (unwrapOptions = {}) {
   const {paramStyle, queryKey, mockKey} = unwrapOptions
@@ -186,10 +188,10 @@ export function unwrapAPI (unwrapOptions = {}) {
               if(url.indexOf(fakeDomain) === 0) {
                 url = url.slice(fakeDomain.length)
               }
-              if (base) {
+              if (base && !REGEX_HTTP_PROTOCOL.test(url)) {
                 url = joinPath(base + '', url)
               }
-              query = {...param, ...query};
+              query = {...param, ...query}
               if (!hasBody && !isEmpty(query)) {
                 url = url + '?' + qs.stringify(query)
               }
@@ -266,8 +268,8 @@ export function unwrapAPI (unwrapOptions = {}) {
                             : mock
                         )
                   )
-                  : abortableFetch(url, init);
-                // console.error(url, init);
+                  : abortableFetch(url, init)
+                // console.error(url, init)
                 return Promise.race([timeoutPromise, promise])
                   .then(() => {
                     clearTimeout(timeoutId)
@@ -280,7 +282,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                   .then(getResponse)
                   .then(res => {
                     afterResponse(res)
-                    // console.log('res', res, success, service, actions[service]);
+                    // console.log('res', res, success, service, actions[service])
                     return onSuccess({
                       data: res,
                       urlParam,
