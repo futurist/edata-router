@@ -15,6 +15,13 @@ export function isFunction(e) {
   return typeof e === 'function'
 }
 
+export function joinPath (prev, url) {
+  prev = prev || ''
+  if (url[0] != '/') url = '/' + url
+  if (prev[prev.length - 1] == '/') prev = prev.slice(0, -1)
+  return prev + url
+}
+
 // use native browser implementation if it supports aborting
 const abortableFetch = 'signal' in new Request('') ? window.fetch : fetch
 
@@ -135,6 +142,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                 afterResponse,
                 errorHandler
               } = actionConfig
+              let host = actionConfig.host || actions.host
               if (typeof exec === 'string') {
                 exec = model.unwrap(['_api', name, exec], {
                   map: v => v
@@ -177,6 +185,9 @@ export function unwrapAPI (unwrapOptions = {}) {
               let url = urlObj.toString()
               if(url.indexOf(fakeDomain) === 0) {
                 url = url.slice(fakeDomain.length)
+              }
+              if (host) {
+                url = joinPath(host + '', url)
               }
               query = {...param, ...query};
               if (!hasBody && !isEmpty(query)) {

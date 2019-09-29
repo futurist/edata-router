@@ -8184,6 +8184,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 function noop() {}
 function isFunction(e) {
   return typeof e === 'function';
+}
+function joinPath(prev, url) {
+  prev = prev || '';
+  if (url[0] != '/') url = '/' + url;
+  if (prev[prev.length - 1] == '/') prev = prev.slice(0, -1);
+  return prev + url;
 } // use native browser implementation if it supports aborting
 
 var abortableFetch = 'signal' in new Request('') ? window.fetch : fetch;
@@ -8315,6 +8321,7 @@ function unwrapAPI() {
                   getResponse = actionConfig.getResponse,
                   afterResponse = actionConfig.afterResponse,
                   errorHandler = actionConfig.errorHandler;
+              var host = actionConfig.host || actions.host;
 
               if (typeof exec === 'string') {
                 exec = model.unwrap(['_api', name, exec], {
@@ -8368,6 +8375,10 @@ function unwrapAPI() {
 
               if (url.indexOf(fakeDomain) === 0) {
                 url = url.slice(fakeDomain.length);
+              }
+
+              if (host) {
+                url = joinPath(host + '', url);
               }
 
               query = _objectSpread({}, param, {}, query);
@@ -10832,13 +10843,6 @@ function routeDifference(arr1, arr2) {
   }
 
   return result;
-}
-
-function joinPath(prev, url) {
-  prev = prev || '';
-  if (url[0] != '/') url = '/' + url;
-  if (prev[prev.length - 1] == '/') prev = prev.slice(0, -1);
-  return prev + url;
 }
 /** From react-router-config/matchRoutes
  * Add childRoutes support

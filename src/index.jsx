@@ -9,7 +9,7 @@ import {
 } from 'react-router'
 import qs from 'qs'
 
-import { makeAPI, initModel, noop } from './util'
+import { makeAPI, initModel, joinPath } from './util'
 import matchPath from './match-path'
 import { Provider, connect } from 'react-redux'
 import { createStore } from 'redux'
@@ -259,13 +259,6 @@ function routeDifference (arr1, arr2) {
     }
   }
   return result
-}
-
-function joinPath (prev, url) {
-  prev = prev || ''
-  if (url[0] != '/') url = '/' + url
-  if (prev[prev.length - 1] == '/') prev = prev.slice(0, -1)
-  return prev + url
 }
 
 /** From react-router-config/matchRoutes
