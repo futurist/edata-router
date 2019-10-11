@@ -1,3 +1,9 @@
+<a name="1.1.9"></a>
+## [1.1.9](/compare/v1.1.8...1.1.9) (10/12/2019, 7:10:32 AM)
+
+- startStore trigger redraw  [5ab5bff](/commit/5ab5bff)
+
+
 <a name="v1.1.8"></a>
 ## [v1.1.8](/compare/v1.1.7...v1.1.8) (2019-9-29 11:00:12)
 
