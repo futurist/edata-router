@@ -257,7 +257,11 @@ export function unwrapAPI (unwrapOptions = {}) {
                 }
               }
 
-              return Promise.resolve(startPromise).then(()=>{
+              return Promise.resolve(startPromise).then((startStore)=>{
+                if(startStore != null) {
+                  Object.assign(store, startStore)
+                  model.set(['_store', name], model.of(store))
+                }
                 let promise = mock
                   ? Promise.resolve(
                     isFunction(mock)
