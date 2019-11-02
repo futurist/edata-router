@@ -1,3 +1,10 @@
+<a name="v2.0.1"></a>
+## [v2.0.1](/compare/v2.0.0...v2.0.1) (2019-11-2 20:21:56)
+
+- options.ajax -> ajaxConfig  [f27854d](/commit/f27854d)
+- remove checkStatus hook for ajax, getResponse respect to content-type, success with full response object  [f924fba](/commit/f924fba)
+
+
 <a name="v2.0.0"></a>
 ## [v2.0.0](/compare/1.1.9...v2.0.0) (2019-11-2 18:04:04)
 
