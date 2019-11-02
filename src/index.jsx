@@ -22,7 +22,7 @@ export default class EdataRouterClass {
       initData = {},
       name,
       debug = false,
-      routeMode = '',
+      routeMode = 'hash',
       paramStyle = 'simple',
       queryKey = 'param',
       mockKey = 'mock',

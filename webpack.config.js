@@ -3,7 +3,7 @@ const path = require('path')
 module.exports = {
   context: __dirname,
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
-
+  devtool: 'cheap-module-source-map',
   entry: {
     index: './src/index.jsx'
   },
