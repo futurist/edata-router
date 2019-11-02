@@ -11,10 +11,6 @@ actions/          ＃ 接口动作(success/fail等)
 ├── index.js
 ├── products.js
 └── users.js
-models/           # 接口定义(url, method等)
-├── index.js
-├── products.js
-└── users.js
 ```
 
 ## 主入口 index.jsx
@@ -23,20 +19,21 @@ models/           # 接口定义(url, method等)
 import React from 'react'
 import {render} from 'react-dom'
 import EdataRouter from 'edata-router'
+import {actions1, actions2} from './actions'
+
 const app = new EdataRouter({
-  ajaxSetting: {
+  ajaxConfig: {
     headers: {},
     beforeRequest: (init)=>{},
-    checkStatus: (res)=>{},
-    getResponse: (res)=>{},
-    afterResponse: (res)=>{},
-    errorHandler: (err)=>{}
+    getResponse: (response)=>{},
+    afterResponse: (response)=>{},
+    errorHandler: (error)=>{}
   }
 })
 
 // 导入接口配置
-app.model(actions1, models1?)
-app.model(actions2, models2?)
+app.model(actions1)
+app.model(actions2)
 ... ...
 
 // 设置路由
@@ -48,6 +45,39 @@ render(<App></App>, document.getElementById('main'))
 
 ```
 
+
+## 接口定义  (actions/)
+
+### actions
+
+每个模块都需导出如下结构：
+
+```js
+module.exports = {
+    name: 'products',  // 必填
+    store: {},
+    actions: {
+        getList: {
+          url: '/analysis/api/products/cat/:id',
+          method: 'GET',
+          param: () => ({  //支持对象(静态配置)，函数(动态生成)
+              workspaceCode: window.workspace
+          }),
+          callback: {
+              start: function (store, init) {
+              },
+              success: function (store, result) {
+              },
+              fail: function (store, err) {
+              }
+          }
+        },
+        ... ...
+    }
+}
+```
+
+
 ## 路由配置 (routes.js)
 
 ```js
@@ -55,7 +85,7 @@ export default [
   {
     path: basename,     // 必选
     component: Header,  // 必选
-    modelName: 'base',  // 可选, 相当于 `edata.slice(base)`
+    // modelName: 'base',  // 可选, 相当于 `edata.slice(base)`
     api: ['products', 'users'],  //可选, '*' 表示所有可用API，也可为正则
     onEnter: function (nextState, replaceState) {
       // First render of this route
@@ -75,11 +105,12 @@ export default [
 `Header`组件中，以下方法自动可用:
 
 ```js
-this.props.products.getList(query, {
-  params: {
+this.props.products.getList(
+  query,
+  {
     id: 123
   }
-})
+)
 
 this.props.products.store   // store是action中定义的那个对象
 
@@ -89,44 +120,3 @@ this.props.history
 this.props.location
 this.props.match
 ```
-
-## 接口定义  (actions/ && models/)
-
-### actions
-
-每个模块都需导出如下结构：
-
-```js
-module.exports = {
-    name: 'products',  // 必填
-    store: {},
-    actions: {
-        getList: {
-            callback: {
-                start: function (store, init) {
-                },
-                success: function (store, result) {
-                },
-                fail: function (store, err) {
-                }
-            }
-        },
-        ... ...
-    }
-}
-```
-
-### models
-
-```js
-module.exports = {
-    getList: {
-        url: '/analysis/api/products/cat/:id',
-        method: 'GET',
-        param: () => ({  //支持对象(静态配置)，函数(动态生成)
-            workspaceCode: window.workspace
-        })
-    },
-}
-```
-

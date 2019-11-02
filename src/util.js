@@ -106,7 +106,7 @@ const fakeDomain = 'http://0.0.0.0'
 export function unwrapAPI (unwrapOptions = {}) {
   const {paramStyle, queryKey, mockKey, debug} = unwrapOptions
   const ajaxSetting = {...globalAjaxSetting, ...unwrapOptions.ajaxSetting}
-  console.log(ajaxSetting, unwrapOptions, 9999)
+
   return packer => {
     if (!packer) return
     const { path, root } = packer

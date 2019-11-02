@@ -1,15 +1,17 @@
 const path = require('path')
+const _ = require('lodash')
+const isProduction = process.env.NODE_ENV === 'production'
 
-module.exports = {
+const baseConfig = {
   context: __dirname,
-  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
-  devtool: 'cheap-module-source-map',
+  mode: isProduction ? 'production' : 'development',
+  devtool: isProduction ? 'source-map' : 'cheap-module-source-map',
   entry: {
     index: './src/index.jsx'
   },
 
   output: {
-    filename: '[name].js',
+    filename: 'cjs.js',
     chunkFilename: '[name].js',
     path: path.resolve('dist'),
     libraryTarget: 'commonjs2',
@@ -31,11 +33,11 @@ module.exports = {
     rules: [
         {
             test: /\.jsx?$/,
-            exclude: /(node_modules|bower_components)/,
-    
+            ...!isProduction && {exclude: /(node_modules|bower_components)/},
             use: {
               loader: 'babel-loader',
               options: {
+                cacheDirectory: true,
                 presets: [
                   require.resolve('@babel/preset-env'),
                   require.resolve('@babel/preset-react')
@@ -51,6 +53,16 @@ module.exports = {
     ]
   },
   optimization: {
-      minimize: false
+      minimize: isProduction
   }
 }
+
+module.exports = !isProduction ? baseConfig : [
+  baseConfig,
+  _.merge(_.cloneDeep(baseConfig), {
+    output: {
+      filename: 'umd.js',
+      libraryTarget: 'umd'
+    }
+  }),
+]

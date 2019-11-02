@@ -2,7 +2,8 @@
   "name": "edata-router",
   "version": "2.0.1",
   "description": "Edata router for react",
-  "main": "dist/index.js",
+  "main": "dist/cjs.js",
+  "unpkg": "dist/umd.js",
   "scripts": {
     "prepublish": "npm run build",
     "build": "NODE_ENV=production webpack",
@@ -30,9 +31,11 @@
     "babel-loader": "^8.0.6",
     "babel-plugin-add-module-exports": "^1.0.2",
     "edata": "^0.9.5",
+    "fetch-parse": "^1.1.0",
     "history": "^4.9.0",
     "is-plain-obj": "^2.0.0",
     "lodash": "^4.17.15",
+    "medium-type": "^1.0.0",
     "path-to-regexp": "^3.0.0",
     "prop-types": "^15.7.2",
     "qs": "^6.8.0",
@@ -43,8 +46,5 @@
     "webpack-cli": "^3.3.9",
     "whatwg-fetch": "^3.0.0"
   },
-  "dependencies": {
-    "fetch-parse": "^1.1.0",
-    "medium-type": "^1.0.0"
-  }
+  "dependencies": {}
 }
