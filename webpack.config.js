@@ -5,7 +5,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 const baseConfig = {
   context: __dirname,
   mode: isProduction ? 'production' : 'development',
-  devtool: isProduction ? 'source-map' : 'cheap-module-source-map',
+  devtool: isProduction ? 'hidden-source-map' : 'cheap-module-source-map',
   entry: {
     index: './src/index.jsx'
   },
