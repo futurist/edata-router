@@ -43,5 +43,8 @@
     "webpack-cli": "^3.3.9",
     "whatwg-fetch": "^3.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "fetch-parse": "^1.1.0",
+    "medium-type": "^1.0.0"
+  }
 }

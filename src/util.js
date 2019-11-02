@@ -9,6 +9,10 @@ import 'url-polyfill'
 import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only'
 import { fetch } from 'whatwg-fetch'
 
+import {parse as parseResponse} from 'fetch-parse'
+import MediaType from 'medium-type'
+const WILDCARD_PARSER = [[new MediaType("*/*"), null]]
+
 export function noop(){}
 
 export function isFunction(e) {
@@ -29,35 +33,13 @@ const defaultHeaders = {
   'Content-Type': 'application/json; charset=utf-8'
 }
 
-export const globalAjaxSetting = {
-  headers: defaultHeaders,
-  beforeRequest: identity,
-  checkStatus: defaultCheckStatus,
-  getResponse: defaultGetResponse,
-  afterResponse: identity,
-  errorHandler: null
-}
-
 const defaultReplaceParams = { encode: noop }
 function replaceParams (url, params, options) {
   return pathToRegexp.compile(url)(params || {}, options)
 }
 
-function defaultCheckStatus (response) {
-  if (
-    response.status < 300 ||
-    response.status == 304
-  ) {
-    return response
-  } else {
-    var error = new Error(response.statusText)
-    error.response = response
-    throw error
-  }
-}
-
 function defaultGetResponse (response) {
-  return response.json()
+  return parseResponse(WILDCARD_PARSER, response)
 }
 
 function identity (res) {
@@ -76,6 +58,14 @@ function unwrapEData(edata) {
         edata = edata.value
     }
     return edata
+}
+
+export const globalAjaxSetting = {
+  headers: defaultHeaders,
+  beforeRequest: identity,
+  getResponse: defaultGetResponse,
+  afterResponse: identity,
+  errorHandler: null
 }
 
 export function makeAPI (model, res) {
@@ -116,6 +106,7 @@ const fakeDomain = 'http://0.0.0.0'
 export function unwrapAPI (unwrapOptions = {}) {
   const {paramStyle, queryKey, mockKey, debug} = unwrapOptions
   const ajaxSetting = {...globalAjaxSetting, ...unwrapOptions.ajaxSetting}
+  console.log(ajaxSetting, unwrapOptions, 9999)
   return packer => {
     if (!packer) return
     const { path, root } = packer
@@ -139,7 +130,6 @@ export function unwrapAPI (unwrapOptions = {}) {
                 timeout,
                 headers,
                 beforeRequest,
-                checkStatus,
                 getResponse,
                 afterResponse,
                 errorHandler
@@ -281,15 +271,12 @@ export function unwrapAPI (unwrapOptions = {}) {
                     clearTimeout(timeoutId)
                     return promise
                   })
-                  .then(res => {
-                    isFunction(checkStatus) && checkStatus(res)
-                    return res
-                  })
                   .then(getResponse)
                   .then(res => {
                     afterResponse(res)
                     return onSuccess({
-                      data: res,
+                      response: res,
+                      body: res.body,
                       urlParam,
                       param: query,
                       headerParam: init.headers

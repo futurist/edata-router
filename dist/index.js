@@ -82,7 +82,7 @@ module.exports =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 107);
+/******/ 	return __webpack_require__(__webpack_require__.s = 109);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -157,7 +157,7 @@ module.exports = invariant;
 if (false) { var throwOnDirectAccess, ReactIs; } else {
   // By explicitly using `prop-types` you are opting into new production behavior.
   // http://fb.me/prop-types-in-prod
-  module.exports = __webpack_require__(36)();
+  module.exports = __webpack_require__(38)();
 }
 
 
@@ -200,9 +200,9 @@ module.exports = isArray;
 "use strict";
 
 
-var stringify = __webpack_require__(38);
-var parse = __webpack_require__(39);
-var formats = __webpack_require__(25);
+var stringify = __webpack_require__(40);
+var parse = __webpack_require__(41);
+var formats = __webpack_require__(26);
 
 module.exports = {
     formats: formats,
@@ -1612,8 +1612,8 @@ module.exports = require("react-router");
 /***/ (function(module, exports, __webpack_require__) {
 
 var Symbol = __webpack_require__(16),
-    getRawTag = __webpack_require__(50),
-    objectToString = __webpack_require__(51);
+    getRawTag = __webpack_require__(52),
+    objectToString = __webpack_require__(53);
 
 /** `Object#toString` result references. */
 var nullTag = '[object Null]',
@@ -1645,7 +1645,7 @@ module.exports = baseGetTag;
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var freeGlobal = __webpack_require__(26);
+var freeGlobal = __webpack_require__(27);
 
 /** Detect free variable `self`. */
 var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
@@ -1733,7 +1733,7 @@ module.exports = nativeCreate;
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var eq = __webpack_require__(32);
+var eq = __webpack_require__(33);
 
 /**
  * Gets the index at which the `key` is found in `array` of key-value pairs.
@@ -1760,7 +1760,7 @@ module.exports = assocIndexOf;
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isKeyable = __webpack_require__(95);
+var isKeyable = __webpack_require__(97);
 
 /**
  * Gets the data for `map`.
@@ -2449,8 +2449,8 @@ module.exports = isObject;
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseIsNative = __webpack_require__(69),
-    getValue = __webpack_require__(73);
+var baseIsNative = __webpack_require__(71),
+    getValue = __webpack_require__(75);
 
 /**
  * Gets the native function at `key` of `object`.
@@ -2505,23 +2505,413 @@ module.exports = isSymbol;
 
 /***/ }),
 /* 20 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-"use strict";
+module.exports = MediumType
 
+/**
+ * [RFC 2045][rfc2045] media type class.
+ *
+ * Implements parsing based on [RFC 2045][rfc2045] with added support for
+ * suffixes ([RFC 3023][rfc3023], [RFC 6839][rfc6839]).
+ *
+ * Pass it a string or an object with necessary fields.  
+ * Media types with invalid syntax will result in a `SyntaxError` being thrown.
+ *
+ * [rfc2045]: https://tools.ietf.org/html/rfc2045
+ * [rfc3023]: https://tools.ietf.org/html/rfc3023
+ * [rfc6839]: https://tools.ietf.org/html/rfc6839
+ *
+ * @example
+ * new MediumType("application/vnd.app.model+json; charset=utf-8")
+ *
+ * new MediumType({
+ *   type: "application",
+ *   subtype: "vnd.app.model",
+ *   suffix: "json",
+ *   parameters: {charset: "utf-8"}
+ * })
+ *
+ * @class MediumType
+ * @constructor
+ * @param {String, Object, MediumType} mediaType
+ */
+function MediumType(type) {
+  if (!(this instanceof MediumType)) return new MediumType(type)
+  this.parameters = {}
 
-if (true) {
-  module.exports = __webpack_require__(105);
-} else {}
+  if (type instanceof MediumType) {
+    this.type = type.type
+    this.subtype = type.subtype
+    this.suffix = type.suffix
+    this.parameters = assign(this.parameters, type.parameters)
+  }
+  else if (typeof type == "string") {
+    var match = MEDIA_TYPE.exec(type)
+    if (!match) throw SyntaxError("Invalid Media Type: " + type)
+
+    this.type = match[1].toLowerCase()
+    this.subtype = match[2].toLowerCase()
+
+    // Suffix is an implicit part of the subtype:
+    // http://tools.ietf.org/html/rfc3023
+    // http://tools.ietf.org/html/rfc6839
+    var suffix = this.subtype.indexOf("+")
+    if (suffix != -1) this.suffix = this.subtype.slice(suffix + 1)
+    if (this.suffix.length) this.subtype = this.subtype.slice(0, suffix)
+
+    var param
+    PARAMETERS.lastIndex = match[1].length + 1 + match[2].length
+    while (param = matchAt(type, PARAMETERS, PARAMETERS.lastIndex)) {
+      this.parameters[param[1].toLowerCase()] = unquote(param[2])
+    }
+  }
+  else if (type && typeof type == "object") assign(this, type)
+  else if (type === undefined);
+  else throw new SyntaxError("Invalid Media Type: " + type)
+}
+
+/**
+ * Type of the media type.  
+ * Always in lower case.
+ *
+ * @example
+ * new MediumType("application/json").type // "application"
+ *
+ * @property {String} type
+ */
+MediumType.prototype.type = ""
+
+/**
+ * Subtype of the media type.  
+ * Always in lower case.
+ *
+ * @example
+ * new MediumType("application/json").subtype // "json"
+ *
+ * @property {String} subtype
+ */
+MediumType.prototype.subtype = ""
+
+/**
+ * Suffix of the media type.  
+ * Always in lower case.
+ *
+ * @example
+ * new MediumType("application/vnd.app.model+xml").suffix // "xml"
+ *
+ * @property {String} suffix
+ */
+MediumType.prototype.suffix = ""
+
+/**
+ * Parameters of the media type.  
+ * Keys are always in lower case. Values are left as-is.
+ *
+ * @example
+ * new MediumType("text/html; q=0.3; charset=utf-8").parameters
+ * // {q: "0.3", charset: "utf-8"}
+ *
+ * @property {Object} parameters
+ */
+
+/**
+ * Full media type name without parameters (read-only).  
+ * Contains the type, subtype and optional suffix.
+ *
+ * @example
+ * new MediumType("application/rdf+xml").name // application/rdf+xml
+ * new MediumType("text/html; q=0.3").name // text/html
+ *
+ * @property {String} name
+ */
+Object.defineProperty(MediumType.prototype, "name", {
+  get: function() { return nameify(this) },
+  configurable: true, enumerable: true
+})
+
+/**
+ * Numeric quality value of the media type taken from the `q` parameter.  
+ * If missing, will default to `1`.
+ *
+ * @example
+ * new MediumType("text/html; q=0.3").q // 0.3
+ * new MediumType("text/html").q // 1
+ *
+ * @property {Number} q
+ */
+Object.defineProperty(MediumType.prototype, "q", {
+  get: function() { var q = this.parameters.q; return q == null? 1: Number(q) },
+  set: function(value) { this.parameters.q = value },
+  configurable: true, enumerable: true
+})
+
+/**
+ * Stringify a `MediumType` to canonical form.
+ *
+ * @example
+ * new MediumType({type: "text", subtype: "html"}).toString() // "text/html"
+ * new MediumType("text/html;q=0.3").toString() // "text/html; q=0.3"
+ *
+ * @method toString
+ */
+MediumType.prototype.toString = function() {
+  var type = nameify(this)
+
+  for (var name in this.parameters) {
+    var value = this.parameters[name]
+    if (value !== undefined) type += "; " + name + "=" + quote(value)
+  }
+
+  return type
+}
+
+/**
+ * Stringifies the media type to a canonical string when passing it to
+ * `JSON.stringify`.  
+ * This way you don't need to manually call `toString` when stringifying.
+ *
+ * @example
+ * JSON.stringify(new MediumType("text/html")) // "\"text/html\""
+ *
+ * @method toJSON
+ * @alias toString
+ */
+MediumType.prototype.toJSON = MediumType.prototype.toString
+MediumType.prototype.inspect = MediumType.prototype.toString
+
+/**
+ * Matches a given media type pattern to the current media type.  
+ * Supports wildcards (`*`) for type and subtype.  
+ *
+ * Only those parameters are checked that are in the given type. This allows
+ * for matching `application/json; charset=utf-8` by passing in
+ * `application/json`. `application/json; charset=utf-16` however would not
+ * match. The `q` parameter is ignored entirely for easier use when matching
+ * against HTTP's `Accept` header types.
+ *
+ * @example
+ * new MediumType("application/json").match(new MediumType("application/json")) // true
+ * new MediumType("application/json").match("application/*") // true
+ * new MediumType("text/html+zip").match("text/*+zip") // true
+ * new MediumType("text/html; charset=utf-8").match("text/html; charset=utf-8") // true
+ * new MediumType("text/html").match("text/html; q=0.3") // true
+ *
+ * @method match
+ * @param {string, MediumType} type
+ */
+MediumType.prototype.match = function(t) {
+  if (!(t instanceof MediumType)) t = new MediumType(t)
+
+  var eql = true
+  eql = eql && (t.type == "*" || this.type == t.type)
+  eql = eql && (t.subtype == "*" || this.subtype == t.subtype)
+  eql = eql && (t.subtype == "*" && t.suffix == "" || this.suffix == t.suffix)
+  eql = eql && contains(this.parameters, t.parameters)
+  return eql
+}
+
+/**
+ * Parse a media type string to a `MediumType`.  
+ * Media types with invalid syntax will result in a `SyntaxError` being thrown.
+ *
+ * @example
+ * MediumType.parse("application/json")
+ * MediumType.parse("text/html+zip")
+ * MediumType.parse("text/html; charset=utf-8")
+ *
+ * @static
+ * @method parse
+ * @param {string} type
+ */
+MediumType.parse = MediumType
+
+/**
+ * Stringify a `MediumType` to canonical form.
+ *
+ * @example
+ * MediumType.stringify(new MediumType("text/html")) // "text/html"
+ * MediumType.stringify({type: "text", subtype: "html"}) // "text/html"
+ * MediumType.stringify("text/html;q=0.3") // "text/html; q=0.3"
+ *
+ * @static
+ * @method stringify
+ * @alias toString
+ * @param {Object, MediumType} type
+ */
+MediumType.stringify = function(type) {
+  if (type instanceof MediumType) return type.toString()
+  return new MediumType(type).toString()
+}
+
+/**
+ * Split a comma separated string to an array of media type strings.  
+ * Handles quoted parameters with embedded spaces, commas etc.
+ *
+ * If you need `MediaType` instances back, map over the array with
+ * `MediumType`:
+ * ```javascript
+ * MediumType.split(types).map(MediaType)
+ * ```
+ *
+ * @example
+ * MediumType.split("text/html; levels=\"1, 2, 3\", text/plain")
+ * // [
+ * //   "text/html; levels=\"1, 2, 3\",
+ * //   "text/plain"
+ * // ]
+ *
+ * @static
+ * @method split
+ * @param {string} types
+ */
+MediumType.split = function(string) {
+  var types = [], m
+  COMMAS.lastIndex = 0
+
+  do types.push((m = matchAt(string, MEDIA_TYPES, COMMAS.lastIndex))? m[0] : "")
+  while (matchAt(string, COMMAS, MEDIA_TYPES.lastIndex))
+
+  if (MEDIA_TYPES.lastIndex != string.length) {
+    types[types.length - 1] += string.slice(MEDIA_TYPES.lastIndex)
+  }
+
+  return types
+}
+
+/**
+ * Sort an array of `MediumType`s according to sorting rules of the HTTP
+ * `Accept` header listed in [RFC 2616][rfc2616] and [RFC 7231][rfc7231].
+ * That is, first by the `q` parameter, then by type and subtype specificity
+ * and then by parameter count (excluding the `q` parameter).
+ *
+ * Returns a new array and does not modify the given array.
+ *
+ * If you want to sort the comma separated HTTP `Accept` header, split it first
+ * with [`MediumType.split`](#MediumType.split).
+ *
+ * [rfc2616]: https://tools.ietf.org/html/rfc2616
+ * [rfc7231]: https://tools.ietf.org/html/rfc7231
+ *
+ * @example
+ * MediumType.sort([
+ *   new MediumType("text/html; level=3; q=0.7"),
+ *   new MediumType("text/html; q=0.7"),
+ *   new MediumType("text/plain; q=0.5"),
+ *   new MediumType("text/*; q=0.1")
+ * ])
+ *
+ * @static
+ * @method sort
+ * @param {Array} types
+ */
+MediumType.sort = function(types) {
+  return types.slice().sort(MediumType.comparator)
+}
+
+MediumType.comparator = function(a, b) {
+  return sortByQuality(a, b) || sortByType(a, b) || sortByParameters(a, b)
+}
+
+// https://tools.ietf.org/html/rfc2045#section-5.1
+//
+// Using the permissive RFC 2045 5.1 for parsing as opposed to RFC 6838 that
+// states the requirements for _registering_ media types.
+var TOKEN = "[-a-zA-Z0-9!#$%^&*_+{}\\|'.`~]+"
+var QUOTED = "\"[^\\\\\"\x00-\x1f\x7f]*(\\\\.[^\\\\\"\x00-\x1f\x7f]*)*\""
+var TYPE = "(" + TOKEN + ")"
+var COMMAS = /\s*,\s*/g
+
+// https://tools.ietf.org/html/rfc2045#section-5.1
+var PARAMETER = "(?:\\s*;\\s*(" + TOKEN + ")=(" + TOKEN + "|" + QUOTED + "))"
+var PARAMETERS = new RegExp(PARAMETER, "g")
+
+var MEDIA_TYPE = new RegExp("^" + TYPE + "/" + TYPE + PARAMETER + "*$")
+var MEDIA_TYPES = new RegExp(TYPE + "/" + TYPE + PARAMETER + "*", "g")
+
+var ALL_TOKEN = new RegExp("^" + TOKEN + "$")
+var ESCAPE = /([\\"])/g
+var UNESCAPE = /\\(.)/g
+
+function assign(a, b) {
+  for (var key in b) a[key] = b[key]
+  return a
+}
+
+function nameify(type) {
+  var name = type.type + "/" + type.subtype
+  if (type.suffix) name += "+" + type.suffix
+  return name
+}
+
+function quote(value) {
+  if (value == null) return '""'
+  if (ALL_TOKEN.test(value)) return value
+  return '"' + value.replace(ESCAPE, "\\$1") + '"'
+}
+
+function unquote(value) {
+  if (value[0] == '"') return value.slice(1, -1).replace(UNESCAPE, "$1")
+  return value
+}
+
+function matchAt(string, regexp, pos) {
+  regexp.lastIndex = pos
+  var match = regexp.exec(string)
+  if (match == null || match.index != pos) return regexp.lastIndex = pos, null
+  return match
+}
+
+function contains(a, b) {
+  for (var key in b) if (key != "q" && a[key] != b[key]) return false
+  return true
+}
+
+function sortByQuality(a, b) {
+  return b.q - a.q
+}
+
+function sortByType(a, b) {
+  // RFC 7231 does not speak of suffix ordering. Better ignore that for now.
+  if (a.type == b.type && a.subtype == b.subtype) return 0
+  if (a.type == "*" && a.subtype == "*") return 1
+  if (b.type == "*" && b.subtype == "*") return -1
+  if (a.subtype == "*" && b.subtype == "*") return 0
+  if (a.subtype == "*") return 1
+  if (b.subtype == "*") return -1
+  return 0
+}
+
+function sortByParameters(a, b) {
+  return countParameters(b.parameters) - countParameters(a.parameters)
+}
+
+function countParameters(obj) {
+  var i = 0
+  for (var key in obj) if (key != "q") ++i
+  return i
+}
 
 
 /***/ }),
 /* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var arrayEach = __webpack_require__(40),
-    baseEach = __webpack_require__(41),
-    castFunction = __webpack_require__(63),
+"use strict";
+
+
+if (true) {
+  module.exports = __webpack_require__(107);
+} else {}
+
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var arrayEach = __webpack_require__(42),
+    baseEach = __webpack_require__(43),
+    castFunction = __webpack_require__(65),
     isArray = __webpack_require__(3);
 
 /**
@@ -2563,10 +2953,10 @@ module.exports = forEach;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseSet = __webpack_require__(65);
+var baseSet = __webpack_require__(67);
 
 /**
  * Sets the value at `path` of `object`. If a portion of `path` doesn't exist,
@@ -2604,7 +2994,7 @@ module.exports = set;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2614,7 +3004,7 @@ module.exports = set;
  * Copyright 2015, Yahoo! Inc.
  * Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
  */
-var ReactIs = __webpack_require__(20);
+var ReactIs = __webpack_require__(21);
 var REACT_STATICS = {
     childContextTypes: true,
     contextType: true,
@@ -2714,11 +3104,11 @@ module.exports = hoistNonReactStatics;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global, module) {/* harmony import */ var _ponyfill_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(35);
+/* WEBPACK VAR INJECTION */(function(global, module) {/* harmony import */ var _ponyfill_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(37);
 /* global window */
 
 
@@ -2737,10 +3127,10 @@ if (typeof self !== 'undefined') {
 var result = Object(_ponyfill_js__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])(root);
 /* harmony default export */ __webpack_exports__["a"] = (result);
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(106)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(108)(module)))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2773,7 +3163,7 @@ module.exports = util.assign(
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/** Detect free variable `global` from Node.js. */
@@ -2784,7 +3174,7 @@ module.exports = freeGlobal;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -2812,7 +3202,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 /** Used as references for various `Number` constants. */
@@ -2843,7 +3233,7 @@ module.exports = isIndex;
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports) {
 
 /** Used as references for various `Number` constants. */
@@ -2884,11 +3274,11 @@ module.exports = isLength;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isFunction = __webpack_require__(31),
-    isLength = __webpack_require__(29);
+var isFunction = __webpack_require__(32),
+    isLength = __webpack_require__(30);
 
 /**
  * Checks if `value` is array-like. A value is considered array-like if it's
@@ -2923,7 +3313,7 @@ module.exports = isArrayLike;
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var baseGetTag = __webpack_require__(7),
@@ -2966,7 +3356,7 @@ module.exports = isFunction;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports) {
 
 /**
@@ -3009,13 +3399,13 @@ module.exports = eq;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-dom");
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3032,7 +3422,122 @@ module.exports = value => {
 
 
 /***/ }),
-/* 35 */
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var MediaType = __webpack_require__(20)
+var JSONS = ["application/json", "*/*+json"].map(MediaType.parse)
+var XMLS = ["application/xml", "text/xml", "*/*+xml"].map(MediaType.parse)
+var WILDCARD_PARSER = [[new MediaType("*/*"), null]]
+var PARSER_TYPE_ERR = "Parser not a function or true for default: "
+
+exports = module.exports = function(fetch, types) {
+  types = types == null ? WILDCARD_PARSER : parseParsers(types)
+  return assign(exports.fetch.bind(null, fetch, types), fetch)
+}
+
+exports.fetch = function(fetch, types, url, opts) {
+  return fetch(url, opts).then(exports.parse.bind(null, types))
+}
+
+exports.parse = function(types, res) {
+  if (!hasContent(res)) return res
+  var type = parseType(res.headers.get("content-type"))
+  if (type == null) return res
+
+  var parse = findParser(types, type)
+  return parse ? parse(res).then(exports.set.bind(null, res)) : res
+}
+
+exports.arrayBuffer = function(res) {
+  return res.arrayBuffer()
+}
+
+exports.text = function(res) {
+  return res.text()
+}
+
+exports.json = function(res) {
+  /* eslint consistent-return: 0 */
+  return res.text().then(function(body) {
+    if (body !== "") try { return JSON.parse(body) }
+    catch (ex) { exports.set(res, body); throw errorify(res, ex) }
+    else return undefined
+  })
+}
+
+exports.set = function(res, body) {
+  return Object.defineProperty(res, "body", {
+    value: body, configurable: true, writable: true, enumerable: true
+  })
+}
+
+function parseParsers(types) {
+  return reduce(function(pairs, parser, type) {
+    var types = expandType(type)
+
+    if (parser === true)
+      return pairs.concat(types.map(function(type) { return [type, null] }))
+    else if (typeof parser == "function")
+      return pairs.concat(types.map(function(type) { return [type, parser] }))
+    else
+      throw new TypeError(PARSER_TYPE_ERR + parser)
+  }, [], types)
+}
+
+function expandType(type) {
+  switch (type) {
+    case "json": return JSONS
+    case "xml": return XMLS
+    default: return [new MediaType(type)]
+  }
+}
+
+function hasContent(res) {
+  if (res.bodyUsed) return false
+  if (res.status === 204 || res.status === 304) return false
+  var contentType = res.headers.get("content-type")
+  return contentType != null && contentType !== ""
+}
+
+function parseType(type) {
+  try { return new MediaType(type) }
+  catch (ex) {
+    if (ex instanceof SyntaxError || ex instanceof TypeError) return null
+    else throw ex
+  }
+}
+
+function findParser(types, type) {
+  for (var i = 0; i < types.length; ++i)
+    if (type.match(types[i][0])) return types[i][1] || getDefaultParser(type)
+
+  return null
+}
+
+function getDefaultParser(type) {
+  if (type.type === "text") return exports.text
+  if (JSONS.some(type.match, type)) return exports.json
+  if (XMLS.some(type.match, type)) return exports.text
+  return exports.arrayBuffer
+}
+
+function errorify(res, err) {
+  return Object.defineProperty(err, "response", {
+    value: res, configurable: true, writable: true
+  })
+}
+
+function reduce(fn, left, obj) {
+  for (var key in obj) left = fn(left, obj[key], key)
+  return left
+}
+
+function assign(a, b) { for (var k in b) a[k] = b[k]; return a }
+
+
+/***/ }),
+/* 37 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3057,7 +3562,7 @@ function symbolObservablePonyfill(root) {
 
 
 /***/ }),
-/* 36 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3070,7 +3575,7 @@ function symbolObservablePonyfill(root) {
 
 
 
-var ReactPropTypesSecret = __webpack_require__(37);
+var ReactPropTypesSecret = __webpack_require__(39);
 
 function emptyFunction() {}
 function emptyFunctionWithReset() {}
@@ -3128,7 +3633,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 37 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3147,14 +3652,14 @@ module.exports = ReactPropTypesSecret;
 
 
 /***/ }),
-/* 38 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(15);
-var formats = __webpack_require__(25);
+var formats = __webpack_require__(26);
 var has = Object.prototype.hasOwnProperty;
 
 var arrayPrefixGenerators = {
@@ -3433,7 +3938,7 @@ module.exports = function (object, opts) {
 
 
 /***/ }),
-/* 39 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3683,7 +4188,7 @@ module.exports = function (str, opts) {
 
 
 /***/ }),
-/* 40 */
+/* 42 */
 /***/ (function(module, exports) {
 
 /**
@@ -3711,11 +4216,11 @@ module.exports = arrayEach;
 
 
 /***/ }),
-/* 41 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseForOwn = __webpack_require__(42),
-    createBaseEach = __webpack_require__(62);
+var baseForOwn = __webpack_require__(44),
+    createBaseEach = __webpack_require__(64);
 
 /**
  * The base implementation of `_.forEach` without support for iteratee shorthands.
@@ -3731,11 +4236,11 @@ module.exports = baseEach;
 
 
 /***/ }),
-/* 42 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseFor = __webpack_require__(43),
-    keys = __webpack_require__(45);
+var baseFor = __webpack_require__(45),
+    keys = __webpack_require__(47);
 
 /**
  * The base implementation of `_.forOwn` without support for iteratee shorthands.
@@ -3753,10 +4258,10 @@ module.exports = baseForOwn;
 
 
 /***/ }),
-/* 43 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var createBaseFor = __webpack_require__(44);
+var createBaseFor = __webpack_require__(46);
 
 /**
  * The base implementation of `baseForOwn` which iterates over `object`
@@ -3775,7 +4280,7 @@ module.exports = baseFor;
 
 
 /***/ }),
-/* 44 */
+/* 46 */
 /***/ (function(module, exports) {
 
 /**
@@ -3806,12 +4311,12 @@ module.exports = createBaseFor;
 
 
 /***/ }),
-/* 45 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var arrayLikeKeys = __webpack_require__(46),
-    baseKeys = __webpack_require__(58),
-    isArrayLike = __webpack_require__(30);
+var arrayLikeKeys = __webpack_require__(48),
+    baseKeys = __webpack_require__(60),
+    isArrayLike = __webpack_require__(31);
 
 /**
  * Creates an array of the own enumerable property names of `object`.
@@ -3849,15 +4354,15 @@ module.exports = keys;
 
 
 /***/ }),
-/* 46 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseTimes = __webpack_require__(47),
-    isArguments = __webpack_require__(48),
+var baseTimes = __webpack_require__(49),
+    isArguments = __webpack_require__(50),
     isArray = __webpack_require__(3),
-    isBuffer = __webpack_require__(52),
-    isIndex = __webpack_require__(28),
-    isTypedArray = __webpack_require__(54);
+    isBuffer = __webpack_require__(54),
+    isIndex = __webpack_require__(29),
+    isTypedArray = __webpack_require__(56);
 
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
@@ -3904,7 +4409,7 @@ module.exports = arrayLikeKeys;
 
 
 /***/ }),
-/* 47 */
+/* 49 */
 /***/ (function(module, exports) {
 
 /**
@@ -3930,10 +4435,10 @@ module.exports = baseTimes;
 
 
 /***/ }),
-/* 48 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseIsArguments = __webpack_require__(49),
+var baseIsArguments = __webpack_require__(51),
     isObjectLike = __webpack_require__(10);
 
 /** Used for built-in method references. */
@@ -3972,7 +4477,7 @@ module.exports = isArguments;
 
 
 /***/ }),
-/* 49 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var baseGetTag = __webpack_require__(7),
@@ -3996,7 +4501,7 @@ module.exports = baseIsArguments;
 
 
 /***/ }),
-/* 50 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Symbol = __webpack_require__(16);
@@ -4048,7 +4553,7 @@ module.exports = getRawTag;
 
 
 /***/ }),
-/* 51 */
+/* 53 */
 /***/ (function(module, exports) {
 
 /** Used for built-in method references. */
@@ -4076,11 +4581,11 @@ module.exports = objectToString;
 
 
 /***/ }),
-/* 52 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module) {var root = __webpack_require__(8),
-    stubFalse = __webpack_require__(53);
+    stubFalse = __webpack_require__(55);
 
 /** Detect free variable `exports`. */
 var freeExports =  true && exports && !exports.nodeType && exports;
@@ -4118,10 +4623,10 @@ var isBuffer = nativeIsBuffer || stubFalse;
 
 module.exports = isBuffer;
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(27)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(28)(module)))
 
 /***/ }),
-/* 53 */
+/* 55 */
 /***/ (function(module, exports) {
 
 /**
@@ -4145,12 +4650,12 @@ module.exports = stubFalse;
 
 
 /***/ }),
-/* 54 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseIsTypedArray = __webpack_require__(55),
-    baseUnary = __webpack_require__(56),
-    nodeUtil = __webpack_require__(57);
+var baseIsTypedArray = __webpack_require__(57),
+    baseUnary = __webpack_require__(58),
+    nodeUtil = __webpack_require__(59);
 
 /* Node.js helper references. */
 var nodeIsTypedArray = nodeUtil && nodeUtil.isTypedArray;
@@ -4178,11 +4683,11 @@ module.exports = isTypedArray;
 
 
 /***/ }),
-/* 55 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var baseGetTag = __webpack_require__(7),
-    isLength = __webpack_require__(29),
+    isLength = __webpack_require__(30),
     isObjectLike = __webpack_require__(10);
 
 /** `Object#toString` result references. */
@@ -4244,7 +4749,7 @@ module.exports = baseIsTypedArray;
 
 
 /***/ }),
-/* 56 */
+/* 58 */
 /***/ (function(module, exports) {
 
 /**
@@ -4264,10 +4769,10 @@ module.exports = baseUnary;
 
 
 /***/ }),
-/* 57 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(module) {var freeGlobal = __webpack_require__(26);
+/* WEBPACK VAR INJECTION */(function(module) {var freeGlobal = __webpack_require__(27);
 
 /** Detect free variable `exports`. */
 var freeExports =  true && exports && !exports.nodeType && exports;
@@ -4298,14 +4803,14 @@ var nodeUtil = (function() {
 
 module.exports = nodeUtil;
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(27)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(28)(module)))
 
 /***/ }),
-/* 58 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isPrototype = __webpack_require__(59),
-    nativeKeys = __webpack_require__(60);
+var isPrototype = __webpack_require__(61),
+    nativeKeys = __webpack_require__(62);
 
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
@@ -4337,7 +4842,7 @@ module.exports = baseKeys;
 
 
 /***/ }),
-/* 59 */
+/* 61 */
 /***/ (function(module, exports) {
 
 /** Used for built-in method references. */
@@ -4361,10 +4866,10 @@ module.exports = isPrototype;
 
 
 /***/ }),
-/* 60 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var overArg = __webpack_require__(61);
+var overArg = __webpack_require__(63);
 
 /* Built-in method references for those with the same name as other `lodash` methods. */
 var nativeKeys = overArg(Object.keys, Object);
@@ -4373,7 +4878,7 @@ module.exports = nativeKeys;
 
 
 /***/ }),
-/* 61 */
+/* 63 */
 /***/ (function(module, exports) {
 
 /**
@@ -4394,10 +4899,10 @@ module.exports = overArg;
 
 
 /***/ }),
-/* 62 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isArrayLike = __webpack_require__(30);
+var isArrayLike = __webpack_require__(31);
 
 /**
  * Creates a `baseEach` or `baseEachRight` function.
@@ -4432,10 +4937,10 @@ module.exports = createBaseEach;
 
 
 /***/ }),
-/* 63 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var identity = __webpack_require__(64);
+var identity = __webpack_require__(66);
 
 /**
  * Casts `value` to `identity` if it's not a function.
@@ -4452,7 +4957,7 @@ module.exports = castFunction;
 
 
 /***/ }),
-/* 64 */
+/* 66 */
 /***/ (function(module, exports) {
 
 /**
@@ -4479,14 +4984,14 @@ module.exports = identity;
 
 
 /***/ }),
-/* 65 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var assignValue = __webpack_require__(66),
-    castPath = __webpack_require__(74),
-    isIndex = __webpack_require__(28),
+var assignValue = __webpack_require__(68),
+    castPath = __webpack_require__(76),
+    isIndex = __webpack_require__(29),
     isObject = __webpack_require__(17),
-    toKey = __webpack_require__(102);
+    toKey = __webpack_require__(104);
 
 /**
  * The base implementation of `_.set`.
@@ -4532,11 +5037,11 @@ module.exports = baseSet;
 
 
 /***/ }),
-/* 66 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseAssignValue = __webpack_require__(67),
-    eq = __webpack_require__(32);
+var baseAssignValue = __webpack_require__(69),
+    eq = __webpack_require__(33);
 
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
@@ -4566,10 +5071,10 @@ module.exports = assignValue;
 
 
 /***/ }),
-/* 67 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var defineProperty = __webpack_require__(68);
+var defineProperty = __webpack_require__(70);
 
 /**
  * The base implementation of `assignValue` and `assignMergeValue` without
@@ -4597,7 +5102,7 @@ module.exports = baseAssignValue;
 
 
 /***/ }),
-/* 68 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var getNative = __webpack_require__(18);
@@ -4614,13 +5119,13 @@ module.exports = defineProperty;
 
 
 /***/ }),
-/* 69 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isFunction = __webpack_require__(31),
-    isMasked = __webpack_require__(70),
+var isFunction = __webpack_require__(32),
+    isMasked = __webpack_require__(72),
     isObject = __webpack_require__(17),
-    toSource = __webpack_require__(72);
+    toSource = __webpack_require__(74);
 
 /**
  * Used to match `RegExp`
@@ -4667,10 +5172,10 @@ module.exports = baseIsNative;
 
 
 /***/ }),
-/* 70 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var coreJsData = __webpack_require__(71);
+var coreJsData = __webpack_require__(73);
 
 /** Used to detect methods masquerading as native. */
 var maskSrcKey = (function() {
@@ -4693,7 +5198,7 @@ module.exports = isMasked;
 
 
 /***/ }),
-/* 71 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var root = __webpack_require__(8);
@@ -4705,7 +5210,7 @@ module.exports = coreJsData;
 
 
 /***/ }),
-/* 72 */
+/* 74 */
 /***/ (function(module, exports) {
 
 /** Used for built-in method references. */
@@ -4737,7 +5242,7 @@ module.exports = toSource;
 
 
 /***/ }),
-/* 73 */
+/* 75 */
 /***/ (function(module, exports) {
 
 /**
@@ -4756,13 +5261,13 @@ module.exports = getValue;
 
 
 /***/ }),
-/* 74 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var isArray = __webpack_require__(3),
-    isKey = __webpack_require__(75),
-    stringToPath = __webpack_require__(76),
-    toString = __webpack_require__(99);
+    isKey = __webpack_require__(77),
+    stringToPath = __webpack_require__(78),
+    toString = __webpack_require__(101);
 
 /**
  * Casts `value` to a path array if it's not one.
@@ -4783,7 +5288,7 @@ module.exports = castPath;
 
 
 /***/ }),
-/* 75 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var isArray = __webpack_require__(3),
@@ -4818,10 +5323,10 @@ module.exports = isKey;
 
 
 /***/ }),
-/* 76 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var memoizeCapped = __webpack_require__(77);
+var memoizeCapped = __webpack_require__(79);
 
 /** Used to match property names within property paths. */
 var rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
@@ -4851,10 +5356,10 @@ module.exports = stringToPath;
 
 
 /***/ }),
-/* 77 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var memoize = __webpack_require__(78);
+var memoize = __webpack_require__(80);
 
 /** Used as the maximum memoize cache size. */
 var MAX_MEMOIZE_SIZE = 500;
@@ -4883,10 +5388,10 @@ module.exports = memoizeCapped;
 
 
 /***/ }),
-/* 78 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var MapCache = __webpack_require__(79);
+var MapCache = __webpack_require__(81);
 
 /** Error message constants. */
 var FUNC_ERROR_TEXT = 'Expected a function';
@@ -4962,14 +5467,14 @@ module.exports = memoize;
 
 
 /***/ }),
-/* 79 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var mapCacheClear = __webpack_require__(80),
-    mapCacheDelete = __webpack_require__(94),
-    mapCacheGet = __webpack_require__(96),
-    mapCacheHas = __webpack_require__(97),
-    mapCacheSet = __webpack_require__(98);
+var mapCacheClear = __webpack_require__(82),
+    mapCacheDelete = __webpack_require__(96),
+    mapCacheGet = __webpack_require__(98),
+    mapCacheHas = __webpack_require__(99),
+    mapCacheSet = __webpack_require__(100);
 
 /**
  * Creates a map cache object to store key-value pairs.
@@ -5000,12 +5505,12 @@ module.exports = MapCache;
 
 
 /***/ }),
-/* 80 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Hash = __webpack_require__(81),
-    ListCache = __webpack_require__(87),
-    Map = __webpack_require__(93);
+var Hash = __webpack_require__(83),
+    ListCache = __webpack_require__(89),
+    Map = __webpack_require__(95);
 
 /**
  * Removes all key-value entries from the map.
@@ -5027,14 +5532,14 @@ module.exports = mapCacheClear;
 
 
 /***/ }),
-/* 81 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var hashClear = __webpack_require__(82),
-    hashDelete = __webpack_require__(83),
-    hashGet = __webpack_require__(84),
-    hashHas = __webpack_require__(85),
-    hashSet = __webpack_require__(86);
+var hashClear = __webpack_require__(84),
+    hashDelete = __webpack_require__(85),
+    hashGet = __webpack_require__(86),
+    hashHas = __webpack_require__(87),
+    hashSet = __webpack_require__(88);
 
 /**
  * Creates a hash object.
@@ -5065,7 +5570,7 @@ module.exports = Hash;
 
 
 /***/ }),
-/* 82 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var nativeCreate = __webpack_require__(11);
@@ -5086,7 +5591,7 @@ module.exports = hashClear;
 
 
 /***/ }),
-/* 83 */
+/* 85 */
 /***/ (function(module, exports) {
 
 /**
@@ -5109,7 +5614,7 @@ module.exports = hashDelete;
 
 
 /***/ }),
-/* 84 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var nativeCreate = __webpack_require__(11);
@@ -5145,7 +5650,7 @@ module.exports = hashGet;
 
 
 /***/ }),
-/* 85 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var nativeCreate = __webpack_require__(11);
@@ -5174,7 +5679,7 @@ module.exports = hashHas;
 
 
 /***/ }),
-/* 86 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var nativeCreate = __webpack_require__(11);
@@ -5203,14 +5708,14 @@ module.exports = hashSet;
 
 
 /***/ }),
-/* 87 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var listCacheClear = __webpack_require__(88),
-    listCacheDelete = __webpack_require__(89),
-    listCacheGet = __webpack_require__(90),
-    listCacheHas = __webpack_require__(91),
-    listCacheSet = __webpack_require__(92);
+var listCacheClear = __webpack_require__(90),
+    listCacheDelete = __webpack_require__(91),
+    listCacheGet = __webpack_require__(92),
+    listCacheHas = __webpack_require__(93),
+    listCacheSet = __webpack_require__(94);
 
 /**
  * Creates an list cache object.
@@ -5241,7 +5746,7 @@ module.exports = ListCache;
 
 
 /***/ }),
-/* 88 */
+/* 90 */
 /***/ (function(module, exports) {
 
 /**
@@ -5260,7 +5765,7 @@ module.exports = listCacheClear;
 
 
 /***/ }),
-/* 89 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var assocIndexOf = __webpack_require__(12);
@@ -5301,7 +5806,7 @@ module.exports = listCacheDelete;
 
 
 /***/ }),
-/* 90 */
+/* 92 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var assocIndexOf = __webpack_require__(12);
@@ -5326,7 +5831,7 @@ module.exports = listCacheGet;
 
 
 /***/ }),
-/* 91 */
+/* 93 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var assocIndexOf = __webpack_require__(12);
@@ -5348,7 +5853,7 @@ module.exports = listCacheHas;
 
 
 /***/ }),
-/* 92 */
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var assocIndexOf = __webpack_require__(12);
@@ -5380,7 +5885,7 @@ module.exports = listCacheSet;
 
 
 /***/ }),
-/* 93 */
+/* 95 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var getNative = __webpack_require__(18),
@@ -5393,7 +5898,7 @@ module.exports = Map;
 
 
 /***/ }),
-/* 94 */
+/* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var getMapData = __webpack_require__(13);
@@ -5417,7 +5922,7 @@ module.exports = mapCacheDelete;
 
 
 /***/ }),
-/* 95 */
+/* 97 */
 /***/ (function(module, exports) {
 
 /**
@@ -5438,7 +5943,7 @@ module.exports = isKeyable;
 
 
 /***/ }),
-/* 96 */
+/* 98 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var getMapData = __webpack_require__(13);
@@ -5460,7 +5965,7 @@ module.exports = mapCacheGet;
 
 
 /***/ }),
-/* 97 */
+/* 99 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var getMapData = __webpack_require__(13);
@@ -5482,7 +5987,7 @@ module.exports = mapCacheHas;
 
 
 /***/ }),
-/* 98 */
+/* 100 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var getMapData = __webpack_require__(13);
@@ -5510,10 +6015,10 @@ module.exports = mapCacheSet;
 
 
 /***/ }),
-/* 99 */
+/* 101 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseToString = __webpack_require__(100);
+var baseToString = __webpack_require__(102);
 
 /**
  * Converts `value` to a string. An empty string is returned for `null`
@@ -5544,11 +6049,11 @@ module.exports = toString;
 
 
 /***/ }),
-/* 100 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Symbol = __webpack_require__(16),
-    arrayMap = __webpack_require__(101),
+    arrayMap = __webpack_require__(103),
     isArray = __webpack_require__(3),
     isSymbol = __webpack_require__(19);
 
@@ -5587,7 +6092,7 @@ module.exports = baseToString;
 
 
 /***/ }),
-/* 101 */
+/* 103 */
 /***/ (function(module, exports) {
 
 /**
@@ -5614,7 +6119,7 @@ module.exports = arrayMap;
 
 
 /***/ }),
-/* 102 */
+/* 104 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var isSymbol = __webpack_require__(19);
@@ -5641,7 +6146,7 @@ module.exports = toKey;
 
 
 /***/ }),
-/* 103 */
+/* 105 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {(function(global) {
@@ -6131,7 +6636,7 @@ module.exports = toKey;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 104 */
+/* 106 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (factory) {
@@ -6459,7 +6964,7 @@ module.exports = toKey;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 105 */
+/* 107 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6481,7 +6986,7 @@ exports.isElement=function(a){return"object"===typeof a&&null!==a&&a.$$typeof===
 
 
 /***/ }),
-/* 106 */
+/* 108 */
 /***/ (function(module, exports) {
 
 module.exports = function(originalModule) {
@@ -6511,7 +7016,7 @@ module.exports = function(originalModule) {
 
 
 /***/ }),
-/* 107 */
+/* 109 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -7604,11 +8109,11 @@ var lib = __webpack_require__(4);
 var lib_default = /*#__PURE__*/__webpack_require__.n(lib);
 
 // EXTERNAL MODULE: ./node_modules/lodash/forEach.js
-var forEach = __webpack_require__(21);
+var forEach = __webpack_require__(22);
 var forEach_default = /*#__PURE__*/__webpack_require__.n(forEach);
 
 // EXTERNAL MODULE: ./node_modules/lodash/set.js
-var set = __webpack_require__(22);
+var set = __webpack_require__(23);
 var set_default = /*#__PURE__*/__webpack_require__.n(set);
 
 // EXTERNAL MODULE: ./node_modules/edata/dist/umd.js
@@ -7616,7 +8121,7 @@ var umd = __webpack_require__(6);
 var umd_default = /*#__PURE__*/__webpack_require__.n(umd);
 
 // EXTERNAL MODULE: ./node_modules/is-plain-obj/index.js
-var is_plain_obj = __webpack_require__(34);
+var is_plain_obj = __webpack_require__(35);
 var is_plain_obj_default = /*#__PURE__*/__webpack_require__.n(is_plain_obj);
 
 // EXTERNAL MODULE: ./node_modules/path-to-regexp/index.js
@@ -7624,10 +8129,10 @@ var path_to_regexp = __webpack_require__(14);
 var path_to_regexp_default = /*#__PURE__*/__webpack_require__.n(path_to_regexp);
 
 // EXTERNAL MODULE: ./node_modules/url-polyfill/url-polyfill.js
-var url_polyfill = __webpack_require__(103);
+var url_polyfill = __webpack_require__(105);
 
 // EXTERNAL MODULE: ./node_modules/abortcontroller-polyfill/dist/abortcontroller-polyfill-only.js
-var abortcontroller_polyfill_only = __webpack_require__(104);
+var abortcontroller_polyfill_only = __webpack_require__(106);
 
 // CONCATENATED MODULE: ./node_modules/whatwg-fetch/fetch.js
 var support = {
@@ -8147,6 +8652,13 @@ if (!self.fetch) {
   self.Response = fetch_Response
 }
 
+// EXTERNAL MODULE: ./node_modules/fetch-parse/index.js
+var fetch_parse = __webpack_require__(36);
+
+// EXTERNAL MODULE: ./node_modules/medium-type/index.js
+var medium_type = __webpack_require__(20);
+var medium_type_default = /*#__PURE__*/__webpack_require__.n(medium_type);
+
 // CONCATENATED MODULE: ./src/util.js
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -8181,6 +8693,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
+
+
+var WILDCARD_PARSER = [[new medium_type_default.a("*/*"), null]];
 function noop() {}
 function isFunction(e) {
   return typeof e === 'function';
@@ -8196,14 +8711,6 @@ var abortableFetch = 'signal' in new Request('') ? window.fetch : fetch;
 var defaultHeaders = {
   'Content-Type': 'application/json; charset=utf-8'
 };
-var globalAjaxSetting = {
-  headers: defaultHeaders,
-  beforeRequest: identity,
-  checkStatus: defaultCheckStatus,
-  getResponse: defaultGetResponse,
-  afterResponse: identity,
-  errorHandler: null
-};
 var defaultReplaceParams = {
   encode: noop
 };
@@ -8212,18 +8719,8 @@ function replaceParams(url, params, options) {
   return path_to_regexp_default.a.compile(url)(params || {}, options);
 }
 
-function defaultCheckStatus(response) {
-  if (response.status < 300 || response.status == 304) {
-    return response;
-  } else {
-    var error = new Error(response.statusText);
-    error.response = response;
-    throw error;
-  }
-}
-
 function defaultGetResponse(response) {
-  return response.json();
+  return Object(fetch_parse["parse"])(WILDCARD_PARSER, response);
 }
 
 function identity(res) {
@@ -8246,6 +8743,13 @@ function unwrapEData(edata) {
   return edata;
 }
 
+var globalAjaxSetting = {
+  headers: defaultHeaders,
+  beforeRequest: identity,
+  getResponse: defaultGetResponse,
+  afterResponse: identity,
+  errorHandler: null
+};
 function makeAPI(model, res) {
   var namespace = model.name || model.displayName;
 
@@ -8290,6 +8794,7 @@ function unwrapAPI() {
 
   var ajaxSetting = _objectSpread({}, globalAjaxSetting, {}, unwrapOptions.ajaxSetting);
 
+  console.log(ajaxSetting, unwrapOptions, 9999);
   return function (packer) {
     if (!packer) return;
     var path = packer.path,
@@ -8319,7 +8824,6 @@ function unwrapAPI() {
                   timeout = actionConfig.timeout,
                   headers = actionConfig.headers,
                   beforeRequest = actionConfig.beforeRequest,
-                  checkStatus = actionConfig.checkStatus,
                   getResponse = actionConfig.getResponse,
                   afterResponse = actionConfig.afterResponse,
                   errorHandler = actionConfig.errorHandler;
@@ -8466,13 +8970,11 @@ function unwrapAPI() {
                 return Promise.race([timeoutPromise, promise]).then(function () {
                   clearTimeout(timeoutId);
                   return promise;
-                }).then(function (res) {
-                  isFunction(checkStatus) && checkStatus(res);
-                  return res;
                 }).then(getResponse).then(function (res) {
                   afterResponse(res);
                   return onSuccess({
-                    data: res,
+                    response: res,
+                    body: res.body,
                     urlParam: urlParam,
                     param: query,
                     headerParam: init.headers
@@ -8788,7 +9290,7 @@ function _objectWithoutPropertiesLoose(source, excluded) {
   return target;
 }
 // EXTERNAL MODULE: ./node_modules/hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js
-var hoist_non_react_statics_cjs = __webpack_require__(23);
+var hoist_non_react_statics_cjs = __webpack_require__(24);
 var hoist_non_react_statics_cjs_default = /*#__PURE__*/__webpack_require__.n(hoist_non_react_statics_cjs);
 
 // EXTERNAL MODULE: ./node_modules/invariant/browser.js
@@ -8796,7 +9298,7 @@ var browser = __webpack_require__(1);
 var browser_default = /*#__PURE__*/__webpack_require__.n(browser);
 
 // EXTERNAL MODULE: ./node_modules/react-is/index.js
-var react_is = __webpack_require__(20);
+var react_is = __webpack_require__(21);
 
 // CONCATENATED MODULE: ./node_modules/react-redux/es/components/connectAdvanced.js
 
@@ -9175,7 +9677,7 @@ function shallowEqual(objA, objB) {
   return true;
 }
 // EXTERNAL MODULE: ./node_modules/symbol-observable/es/index.js
-var es = __webpack_require__(24);
+var es = __webpack_require__(25);
 
 // CONCATENATED MODULE: ./node_modules/redux/es/redux.js
 
@@ -10465,7 +10967,7 @@ function createSelectorHook(context) {
 
 var useSelector_useSelector = createSelectorHook();
 // EXTERNAL MODULE: external "react-dom"
-var external_react_dom_ = __webpack_require__(33);
+var external_react_dom_ = __webpack_require__(34);
 
 // CONCATENATED MODULE: ./node_modules/react-redux/es/utils/reactBatchedUpdates.js
 /* eslint-disable import/no-unresolved */
@@ -10542,7 +11044,7 @@ function () {
         _ref$mockKey = _ref.mockKey,
         mockKey = _ref$mockKey === void 0 ? 'mock' : _ref$mockKey,
         edataConfig = _ref.edataConfig,
-        ajaxSetting = _ref.ajaxSetting;
+        ajax = _ref.ajax;
 
     _classCallCheck(this, EdataRouterClass);
 
@@ -10550,7 +11052,7 @@ function () {
     this.name = name;
     this.routeMode = routeMode;
     this.makeModel = initModel(edataConfig, {
-      ajaxSetting: ajaxSetting,
+      ajaxSetting: ajax,
       debug: debug,
       paramStyle: paramStyle,
       queryKey: queryKey,
