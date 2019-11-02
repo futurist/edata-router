@@ -11044,7 +11044,7 @@ function () {
         _ref$mockKey = _ref.mockKey,
         mockKey = _ref$mockKey === void 0 ? 'mock' : _ref$mockKey,
         edataConfig = _ref.edataConfig,
-        ajax = _ref.ajax;
+        ajaxConfig = _ref.ajaxConfig;
 
     _classCallCheck(this, EdataRouterClass);
 
@@ -11052,7 +11052,7 @@ function () {
     this.name = name;
     this.routeMode = routeMode;
     this.makeModel = initModel(edataConfig, {
-      ajaxSetting: ajax,
+      ajaxSetting: ajaxConfig,
       debug: debug,
       paramStyle: paramStyle,
       queryKey: queryKey,

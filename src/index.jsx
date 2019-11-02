@@ -27,12 +27,12 @@ export default class EdataRouterClass {
       queryKey = 'param',
       mockKey = 'mock',
       edataConfig,
-      ajax
+      ajaxConfig
     } = {}) {
     this.data = initData
     this.name = name
     this.routeMode = routeMode
-    this.makeModel = initModel(edataConfig, {ajaxSetting: ajax, debug, paramStyle, queryKey, mockKey})
+    this.makeModel = initModel(edataConfig, {ajaxSetting: ajaxConfig, debug, paramStyle, queryKey, mockKey})
   }
   model (modelActions, modelObject) {
     if(typeof modelActions==='function') {
