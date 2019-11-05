@@ -1,3 +1,10 @@
+<a name="v2.0.3"></a>
+## [v2.0.3](/compare/v2.0.2...v2.0.3) (2019-11-5 18:12:46)
+
+- fix: url not update bug for startRequest  [0bfbeab](/commit/0bfbeab)
+- update webpack config  [4ca7ae6](/commit/4ca7ae6)
+
+
 <a name="v2.0.2"></a>
 ## [v2.0.2](/compare/v2.0.1...v2.0.2) (2019-11-2 21:06:11)
 
