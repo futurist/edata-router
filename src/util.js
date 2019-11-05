@@ -227,7 +227,8 @@ export function unwrapAPI (unwrapOptions = {}) {
                   ...window.ajaxHeader
                 },
                 body: hasBody ? JSON.stringify(query) : undefined,
-                ...options
+                ...options,
+                url
               }
               beforeRequest(init)
               url = init.url

@@ -8420,7 +8420,9 @@ function unwrapAPI() {
               }, exec, {
                 headers: _objectSpread({}, headers, {}, exec.headers, {}, window.ajaxHeader),
                 body: hasBody ? JSON.stringify(query) : undefined
-              }, options);
+              }, options, {
+                url: url
+              });
 
               beforeRequest(init);
               url = init.url;
