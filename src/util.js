@@ -230,6 +230,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                 ...options
               }
               beforeRequest(init)
+              url = init.url
               const start = callback && callback.start || reducer && reducer.start
               const fail = callback && callback.fail || reducer && reducer.fail
               let startPromise
