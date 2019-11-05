@@ -1,3 +1,10 @@
+<a name="v1.1.11"></a>
+## [v1.1.11](/compare/v1.1.10...v1.1.11) (2019-11-5 11:57:02)
+
+- fix init.url lost  [9035ab5](/commit/9035ab5)
+- new build  [c6bf2ef](/commit/c6bf2ef)
+
+
 <a name="v1.1.10"></a>
 ## [v1.1.10](/compare/1.1.9...v1.1.10) (2019-11-5 10:35:29)
 
