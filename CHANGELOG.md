@@ -1,3 +1,9 @@
+<a name="v1.1.10"></a>
+## [v1.1.10](/compare/1.1.9...v1.1.10) (2019-11-5 10:35:29)
+
+- fix: beforeRequest not modify url bug  [ef6d86a](/commit/ef6d86a)
+
+
 <a name="1.1.9"></a>
 ## [1.1.9](/compare/v1.1.8...1.1.9) (10/12/2019, 7:10:32 AM)
 
