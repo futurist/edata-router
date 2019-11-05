@@ -144,10 +144,9 @@ export function unwrapAPI (unwrapOptions = {}) {
                 })
               }
               if (!exec) exec = {...actionConfig, ...apiConfig}
-              const success = callback && callback.success ||
-                    reducer && reducer.success ||
-                    callback ||
-                    reducer
+              const success = callback && callback.success || reducer && reducer.success || callback || reducer
+              const start = callback && callback.start || reducer && reducer.start
+              const fail = callback && callback.fail || reducer && reducer.fail
               const onSuccess = (args)=>{
                 if (success) {
                   let ret = success(store, args)
@@ -161,6 +160,25 @@ export function unwrapAPI (unwrapOptions = {}) {
                   })
                 } else {
                   return Promise.resolve(args)
+                }
+              }
+              const onFail = (err = new Error()) => {
+                err.isTimeout = isTimeout
+                err.init = init
+                clearTimeout(timeoutId)
+                isFunction(errorHandler) && errorHandler(err)
+                if (fail) {
+                  const ret = fail(store, err)
+                  if(ret === false) {
+                    return Promise.reject(err)
+                  }
+                  return Promise.resolve(ret).then(ret => {
+                    ret = Object.assign(store, ret)
+                    model.set(['_store', name], model.of(store))
+                    return ret
+                  })
+                } else {
+                  return Promise.reject(err)
                 }
               }
               if(!exec.url) {
@@ -217,34 +235,14 @@ export function unwrapAPI (unwrapOptions = {}) {
                   ...window.ajaxHeader
                 },
                 body: hasBody ? JSON.stringify(query) : undefined,
-                ...options
+                ...options,
+                url
               }
               beforeRequest(init)
-              const start = callback && callback.start || reducer && reducer.start
-              const fail = callback && callback.fail || reducer && reducer.fail
+              url = init.url
               let startPromise
               if(start) {
                 startPromise = start(store, init)
-              }
-
-              const onFail = function (err = new Error()) {
-                err.isTimeout = isTimeout
-                err.init = init
-                clearTimeout(timeoutId)
-                isFunction(errorHandler) && errorHandler(err)
-                if (fail) {
-                  const ret = fail(store, err)
-                  if(ret === false) {
-                    return Promise.reject(err)
-                  }
-                  return Promise.resolve(ret).then(ret => {
-                    ret = Object.assign(store, ret)
-                    model.set(['_store', name], model.of(store))
-                    return ret
-                  })
-                } else {
-                  return Promise.reject(err)
-                }
               }
 
               return Promise.resolve(startPromise).then((startStore)=>{
