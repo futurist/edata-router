@@ -1,3 +1,9 @@
+<a name="v2.0.4"></a>
+## [v2.0.4](/compare/v2.0.3...v2.0.4) (2019-11-6 16:02:46)
+
+- include fetch-parse lib add res.body null case  [72ba813](/commit/72ba813)
+
+
 <a name="v2.0.3"></a>
 ## [v2.0.3](/compare/v2.0.2...v2.0.3) (2019-11-5 18:12:46)
 
