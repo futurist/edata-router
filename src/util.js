@@ -9,7 +9,7 @@ import 'url-polyfill'
 import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only'
 import { fetch } from 'whatwg-fetch'
 
-import {parse as parseResponse} from 'fetch-parse'
+import {parse as parseResponse} from './fetch-parse'
 import MediaType from 'medium-type'
 const WILDCARD_PARSER = [[new MediaType("*/*"), null]]
 

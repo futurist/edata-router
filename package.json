@@ -31,7 +31,6 @@
     "babel-loader": "^8.0.6",
     "babel-plugin-add-module-exports": "^1.0.2",
     "edata": "^0.9.5",
-    "fetch-parse": "^1.1.0",
     "history": "^4.9.0",
     "is-plain-obj": "^2.0.0",
     "lodash": "^4.17.15",
