@@ -27,7 +27,8 @@ export default class EdataRouterClass {
       queryKey = 'param',
       mockKey = 'mock',
       edataConfig,
-      ajaxConfig
+      ajaxConfig,
+      historyConfig
     } = {}) {
     this.data = initData
     this.name = name
@@ -53,6 +54,7 @@ export default class EdataRouterClass {
     // const Router = isHashMode ? HashRouter : BrowserRouter
     const history = this.history = (isHashMode ? createHashHistory : createBrowserHistory)({
       // getUserConfirmation: (message, callback) => callback(window.confirm(message))
+      ...historyConfig
     })
     let curLocation = history.location || window.location
 
