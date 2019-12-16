@@ -33,6 +33,18 @@ export default class EdataRouterClass {
     this.data = initData
     this.name = name
     this.routeMode = routeMode
+    this.options = {
+      initData,
+      name,
+      debug,
+      routeMode,
+      paramStyle,
+      queryKey,
+      mockKey,
+      edataConfig,
+      ajaxConfig,
+      historyConfig
+    }
     this.makeModel = initModel(edataConfig, {ajaxSetting: ajaxConfig, debug, paramStyle, queryKey, mockKey})
   }
   model (modelActions, modelObject) {
@@ -48,7 +60,7 @@ export default class EdataRouterClass {
   }
   run (options = {}) {
     let curHooksBranch = []
-    const { routes, data, routeMode } = this
+    const { routes, data, options: {routeMode, historyConfig} } = this
     const model = this.model = window.model = this.makeModel(data)
     const isHashMode = routeMode === 'hash'
     // const Router = isHashMode ? HashRouter : BrowserRouter
