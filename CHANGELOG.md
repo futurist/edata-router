@@ -1,3 +1,9 @@
+<a name="v2.0.5"></a>
+## [v2.0.5](/compare/v2.0.4...v2.0.5) (2019-12-16 13:05:32)
+
+- add historyConfig  [97c3ecc](/commit/97c3ecc)
+
+
 <a name="v2.0.4"></a>
 ## [v2.0.4](/compare/v2.0.3...v2.0.4) (2019-11-6 16:02:46)
 
