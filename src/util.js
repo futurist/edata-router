@@ -189,11 +189,12 @@ export function unwrapAPI (unwrapOptions = {}) {
               if (isFunction(param)) {
                 param = param()
               }
+              const isBeateStyle = (actionConfig.paramStyle || paramStyle) == 'beatle'
               const method = String(exec.method || 'get').toUpperCase()
               const hasBody = /PUT|POST|PATCH/.test(method)
-              const urlParam = paramStyle === 'beatle' ? options.params : options
+              const urlParam = isBeateStyle  ? options.params : options
               const urlObj = new URL(exec.url, fakeDomain)
-              urlObj.pathname = replaceParams(urlObj.pathname, ...paramStyle === 'beatle' ? [options.params, options.options] : [options])
+              urlObj.pathname = replaceParams(urlObj.pathname, ...isBeateStyle ? [options.params, options.options] : [options])
               let url = urlObj.toString()
               if(url.indexOf(fakeDomain) === 0) {
                 url = url.slice(fakeDomain.length)
