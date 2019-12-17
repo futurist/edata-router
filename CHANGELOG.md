@@ -1,3 +1,9 @@
+<a name="v2.0.8"></a>
+## [v2.0.8](/compare/v2.0.7...v2.0.8) (2019-12-17 17:54:14)
+
+- add actionConfig.paramStyle  [a196ff3](/commit/a196ff3)
+
+
 <a name="v2.0.7"></a>
 ## [v2.0.7](/compare/v2.0.6...v2.0.7) (2019-12-16 21:15:49)
 
