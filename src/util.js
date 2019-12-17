@@ -202,9 +202,20 @@ export function unwrapAPI (unwrapOptions = {}) {
               if (base && !REGEX_HTTP_PROTOCOL.test(url)) {
                 url = joinPath(base + '', url)
               }
-              query = {...param, ...query, ...options.query}
+              query = {...param, ...query}
+              let searchString = ''
               if (!hasBody && !isEmpty(query)) {
-                url = url + '?' + qs.stringify(query)
+                searchString = qs.stringify(query)
+              }
+              if(options.query) {
+                let addon = ''
+                if(searchString) {
+                  addon = '&'
+                }
+                searchString += addon + qs.stringify(options.query)
+              }
+              if(searchString) {
+                url = url + '?' + searchString
               }
               const controller = new AbortController()
               timeout = Number(exec.timeout || timeout)
