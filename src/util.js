@@ -202,7 +202,7 @@ export function unwrapAPI (unwrapOptions = {}) {
               if (base && !REGEX_HTTP_PROTOCOL.test(url)) {
                 url = joinPath(base + '', url)
               }
-              query = {...param, ...query}
+              query = {...param, ...query, ...options.query}
               if (!hasBody && !isEmpty(query)) {
                 url = url + '?' + qs.stringify(query)
               }
