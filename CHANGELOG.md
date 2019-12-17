@@ -1,3 +1,9 @@
+<a name="v2.0.9"></a>
+## [v2.0.9](/compare/v2.0.8...v2.0.9) (2019-12-17 17:56:36)
+
+- add options.query expand  [d811b8b](/commit/d811b8b)
+
+
 <a name="v2.0.8"></a>
 ## [v2.0.8](/compare/v2.0.7...v2.0.8) (2019-12-17 17:54:14)
 
