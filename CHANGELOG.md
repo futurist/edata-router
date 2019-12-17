@@ -1,3 +1,9 @@
+<a name="v2.0.10"></a>
+## [v2.0.10](/compare/v2.0.9...v2.0.10) (2019-12-17 19:19:24)
+
+- feat: allow POST|PATCH add query  [f7c08c4](/commit/f7c08c4)
+
+
 <a name="v2.0.9"></a>
 ## [v2.0.9](/compare/v2.0.8...v2.0.9) (2019-12-17 17:56:36)
 
