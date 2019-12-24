@@ -144,6 +144,9 @@ export function unwrapAPI (unwrapOptions = {}) {
                 })
               }
               if (!exec) exec = {...actionConfig, ...apiConfig}
+              if(isFunction(headers)) {
+                headers = headers(exec)
+              }
               const success = callback && callback.success || reducer && reducer.success || callback || reducer
               const start = callback && callback.start || reducer && reducer.start
               const fail = callback && callback.fail || reducer && reducer.fail
@@ -237,6 +240,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                   resolve()
                 }
               })
+
               let init = {
                 method,
                 signal: controller.signal,
