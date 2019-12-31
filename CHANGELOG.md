@@ -1,3 +1,9 @@
+<a name="v2.0.12"></a>
+## [v2.0.12](/compare/v2.0.11...v2.0.12) (2019-12-31 15:05:45)
+
+- allow function for base, headers  [52ee6c6](/commit/52ee6c6)
+
+
 <a name="v2.0.11"></a>
 ## [v2.0.11](/compare/v2.0.10...v2.0.11) (2019-12-24 11:29:17)
 
