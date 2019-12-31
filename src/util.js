@@ -38,6 +38,25 @@ function replaceParams (url, params, options) {
   return pathToRegexp.compile(url)(params || {}, options)
 }
 
+export function parseUrlPart(url) {
+  const [part1, hash = ''] = url.split('#')
+  const [part2, query = ''] = part1.split('?')
+  const [, protocol = '', host = '', pathname] = part2.match(/^(\w+:)?(\/\/[\w\d\-\.:]+)?(.*)$/)
+  return {
+    protocol,
+    host,
+    pathname,
+    query,
+    hash,
+  }
+}
+// console.log(parseUrlPart('http://10.0.2.2:8081/playground/index.bundle?platform=android&dev=true&minify=false'))
+
+export function joinUrlPart(obj) {
+  const { protocol = '', host = '', pathname = '', query = '', hash = '' } = obj
+  return protocol + host + pathname + (query ? '?' + query : '') + (hash ? '#' + hash : '')
+}
+
 function defaultGetResponse (response) {
   return parseResponse(WILDCARD_PARSER, response)
 }
@@ -100,13 +119,14 @@ export function initModel (config, unwrapOptions) {
   })
 }
 
+export function constOrFunction(value) {
+  return isFunction(value) ? value() : value
+}
+
 const REGEX_HTTP_PROTOCOL = /^(https?:)?\/\//i
 
 const fakeDomain = 'http://0.0.0.0'
-export function unwrapAPI (unwrapOptions = {}) {
-  const {paramStyle, queryKey, mockKey, debug} = unwrapOptions
-  const ajaxSetting = {...globalAjaxSetting, ...unwrapOptions.ajaxSetting}
-
+export function unwrapAPI(unwrapOptions = {}) {
   return packer => {
     if (!packer) return
     const { path, root } = packer
@@ -116,13 +136,19 @@ export function unwrapAPI (unwrapOptions = {}) {
       return {
         map: apiConfig => {
           return (query, options = {}) =>
-            Promise.resolve(
-              isFunction(apiConfig) ? apiConfig() : apiConfig
-            ).then(apiConfig => {
+            Promise.resolve(isFunction(apiConfig) ? apiConfig(packer) : apiConfig).then(apiConfig => {
+              const { paramStyle, queryKey, mockKey, debug } = unwrapOptions
+              const ajaxSetting = { ...globalAjaxSetting, ...unwrapOptions.ajaxSetting }
               options = options || {}
               const actions = model.unwrap(['_actions', name]) || {}
               const store = model.unwrap(['_store', name]) || {}
-              const actionConfig = { ...ajaxSetting, ...(actions[service] || {}) }
+              let actionService = actions[service]
+              if(isFunction(actionService)) {
+                actionService = {
+                  callback: actionService
+                }
+              }
+              const actionConfig = { ...ajaxSetting, ...actionService }
               let {
                 exec,
                 reducer,
@@ -132,31 +158,32 @@ export function unwrapAPI (unwrapOptions = {}) {
                 beforeRequest,
                 getResponse,
                 afterResponse,
-                errorHandler
+                errorHandler,
               } = actionConfig
-              let base = actionConfig.base || actions.base
-              if(debug && !errorHandler) {
+              let base = constOrFunction(actionConfig.base || actions.base)
+              if (debug && !errorHandler) {
                 errorHandler = debugErrorHandler
               }
               if (typeof exec === 'string') {
                 exec = model.unwrap(['_api', name, exec], {
-                  map: v => v
+                  map: v => v,
                 })
               }
-              if (!exec) exec = {...actionConfig, ...apiConfig}
-              if(isFunction(headers)) {
-                headers = headers(exec)
-              }
-              const success = callback && callback.success || reducer && reducer.success || callback || reducer
-              const start = callback && callback.start || reducer && reducer.start
-              const fail = callback && callback.fail || reducer && reducer.fail
-              const onSuccess = (args)=>{
+              if (!exec) exec = { ...actionConfig, ...apiConfig }
+              const success =
+                (callback && callback.success) ||
+                (reducer && reducer.success) ||
+                callback ||
+                reducer
+              const start = (callback && callback.start) || (reducer && reducer.start)
+              const fail = (callback && callback.fail) || (reducer && reducer.fail)
+              const onSuccess = args => {
                 if (success) {
                   let ret = success(store, args)
-                  if(ret === false) {
+                  if (ret === false) {
                     return Promise.resolve(args)
                   }
-                  return Promise.resolve(ret).then((ret)=>{
+                  return Promise.resolve(ret).then(ret => {
                     ret = Object.assign(store, ret)
                     model.set(['_store', name], model.of(store))
                     return ret
@@ -172,7 +199,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                 isFunction(errorHandler) && errorHandler(err)
                 if (fail) {
                   const ret = fail(store, err)
-                  if(ret === false) {
+                  if (ret === false) {
                     return Promise.reject(err)
                   }
                   return Promise.resolve(ret).then(ret => {
@@ -184,24 +211,26 @@ export function unwrapAPI (unwrapOptions = {}) {
                   return Promise.reject(err)
                 }
               }
-              if(!exec.url) {
-                return onSuccess({data: query})
+              if (!exec.url) {
+                return onSuccess({ data: query })
               }
+
               let mock = exec[mockKey]
               let param = exec[queryKey]
               if (isFunction(param)) {
                 param = param()
               }
+
               const isBeateStyle = (actionConfig.paramStyle || paramStyle) == 'beatle'
               const method = String(exec.method || 'get').toUpperCase()
               const hasBody = /PUT|POST|PATCH/.test(method)
-              const urlParam = isBeateStyle  ? options.params : options
-              const urlObj = new URL(exec.url, fakeDomain)
-              urlObj.pathname = replaceParams(urlObj.pathname, ...isBeateStyle ? [options.params, options.options] : [options])
-              let url = urlObj.toString()
-              if(url.indexOf(fakeDomain) === 0) {
-                url = url.slice(fakeDomain.length)
-              }
+              const urlParam = isBeateStyle ? options.params : options
+              const urlObj = parseUrlPart(exec.url)
+              urlObj.pathname = replaceParams(
+                urlObj.pathname,
+                ...(isBeateStyle ? [options.params, options.options] : [options]),
+              )
+              let url = joinUrlPart(urlObj)
               if (base && !REGEX_HTTP_PROTOCOL.test(url)) {
                 url = joinPath(base + '', url)
               }
@@ -221,7 +250,7 @@ export function unwrapAPI (unwrapOptions = {}) {
                 url = url + '?' + searchString
               }
               const controller = new AbortController()
-              timeout = Number(exec.timeout || timeout)
+              timeout = Number(constOrFunction(exec.timeout || timeout))
               let isTimeout = false
               let timeoutId = -1
               let timeoutPromise = new Promise((resolve, reject) => {
@@ -240,68 +269,67 @@ export function unwrapAPI (unwrapOptions = {}) {
                   resolve()
                 }
               })
-
               let init = {
                 method,
                 signal: controller.signal,
                 ...exec,
                 headers: {
-                  ...headers,
-                  ...exec.headers,
-                  ...window.ajaxHeader
+                  ...constOrFunction(headers),
+                  ...constOrFunction(exec.headers),
+                  ...constOrFunction(window.ajaxHeader),
                 },
                 body: hasBody ? JSON.stringify(query) : undefined,
                 ...options,
-                url
+                url,
               }
               beforeRequest(init)
               url = init.url
               let startPromise
-              if(start) {
+              if (start) {
                 startPromise = start(store, init)
               }
 
-              return Promise.resolve(startPromise).then((startStore)=>{
-                if(startStore != null) {
-                  Object.assign(store, startStore)
-                  model.set(['_store', name], model.of(store))
-                }
-                let promise = mock
-                  ? Promise.resolve(
-                    isFunction(mock)
-                      ? mock()
-                      : mock instanceof Response
-                        ? mock
-                        : new Response(
-                          isPOJO(mock) || Array.isArray(mock)
-                            ? JSON.stringify(mock)
-                            : mock
-                        )
-                  )
-                  : abortableFetch(url, init)
-                // console.error(url, init)
-                return Promise.race([timeoutPromise, promise])
-                  .then(() => {
-                    clearTimeout(timeoutId)
-                    return promise
-                  })
-                  .then(getResponse)
-                  .then(res => {
-                    afterResponse(res)
-                    return onSuccess({
-                      response: res,
-                      body: res.body,
-                      urlParam,
-                      param: query,
-                      headerParam: init.headers
-                    }).then(()=>{
-                      return res
+              return Promise.resolve(startPromise)
+                .then(startStore => {
+                  if (startStore != null) {
+                    Object.assign(store, startStore)
+                    model.set(['_store', name], model.of(store))
+                  }
+                  let promise = mock
+                    ? Promise.resolve(
+                        isFunction(mock)
+                          ? mock()
+                          : mock instanceof Response
+                          ? mock
+                          : new Response(
+                              isPOJO(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock,
+                            ),
+                      )
+                    : abortableFetch(url, init)
+                  // console.error(url, init)
+                  return Promise.race([timeoutPromise, promise])
+                    .then(() => {
+                      clearTimeout(timeoutId)
+                      return promise
                     })
-                  })
-                  .catch(onFail)
-              }).catch(onFail)
+                    .then(getResponse)
+                    .then(res => {
+                      afterResponse(res)
+                      return onSuccess({
+                        response: res,
+                        body: res.body,
+                        urlParam,
+                        param: query,
+                        headerParam: init.headers,
+                      }).then(() => {
+                        return res
+                      })
+                    })
+                    .catch(onFail)
+                })
+                .catch(onFail)
             })
-        }
+        },
       }
     }
   }
