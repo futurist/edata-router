@@ -162,7 +162,7 @@ export function getAPIFactoryFromModel(model) {
   }
 
   function getAPIFromRoute({
-    api = []
+    api = ['*']
   } = {}) {
     const props = {}
     // const apiObj = model.unwrap(['_api', '_global']) || {}
