@@ -374,9 +374,9 @@ export function unwrapAPI(unwrapOptions = {}) {
                 signal: controller.signal,
                 ...exec,
                 headers: {
+                  ...constOrFunction(window.ajaxHeader),
                   ...constOrFunction(headers),
                   ...constOrFunction(exec.headers),
-                  ...constOrFunction(window.ajaxHeader),
                 },
                 body: hasBody ? JSON.stringify(query) : undefined,
                 ...options,
