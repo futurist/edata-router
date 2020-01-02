@@ -1,3 +1,11 @@
+<a name="v3.0.0"></a>
+## [v3.0.0](/compare/v2.0.13...v3.0.0) (2020-1-2 14:10:20)
+
+- getAPIFromRoute default has all api  [936d71e](/commit/936d71e)
+- format document  [24ab64f](/commit/24ab64f)
+- getAPIFromRoute can be empty args  [14a127b](/commit/14a127b)
+
+
 <a name="v2.0.13"></a>
 ## [v2.0.13](/compare/v2.0.12...v2.0.13) (2020-1-2 12:21:50)
 
