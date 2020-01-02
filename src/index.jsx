@@ -61,7 +61,7 @@ export default class EdataRouterClass {
   run(options = {}) {
     let curHooksBranch = []
     const { routes, data, options: { routeMode, historyConfig } } = this
-    const model = this.model = window.model = this.makeModel(data)
+    const {model, apiProps} = this.model = window.model = this.makeModel(data)
     const isHashMode = routeMode === 'hash'
     // const Router = isHashMode ? HashRouter : BrowserRouter
     const history = this.history = (isHashMode ? createHashHistory : createBrowserHistory)({

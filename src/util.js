@@ -140,10 +140,10 @@ export function initModel(config, unwrapOptions) {
     const {
       getAPIFromRoute
     } = getAPIFactoryFromModel(model)
-    unwrapOptions.apiProps = getAPIFromRoute({
+    const apiProps = unwrapOptions.apiProps = getAPIFromRoute({
       api: ['*']
     })
-    return model
+    return {model, apiProps}
   }
 }
 
