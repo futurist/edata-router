@@ -1,3 +1,9 @@
+<a name="v2.0.13"></a>
+## [v2.0.13](/compare/v2.0.12...v2.0.13) (2020-1-2 12:21:50)
+
+- allow actions invoke other actions  [57e8c43](/commit/57e8c43)
+
+
 <a name="v2.0.12"></a>
 ## [v2.0.12](/compare/v2.0.11...v2.0.12) (2019-12-31 15:05:45)
 

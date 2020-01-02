@@ -1,6 +1,6 @@
 {
   "name": "edata-router",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "description": "Edata router for react",
   "main": "dist/cjs.js",
   "unpkg": "dist/umd.js",
