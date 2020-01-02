@@ -1,3 +1,10 @@
+<a name="v3.0.1"></a>
+## [v3.0.1](/compare/v3.0.0...v3.0.1) (2020-1-2 14:34:34)
+
+- getAPIFromRoute return apiProps  [1966f74](/commit/1966f74)
+- new build  [d1e28f0](/commit/d1e28f0)
+
+
 <a name="v3.0.0"></a>
 ## [v3.0.0](/compare/v2.0.13...v3.0.0) (2020-1-2 14:10:20)
 
