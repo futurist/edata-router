@@ -113,10 +113,53 @@ export function makeAPI (model, res) {
 }
 
 export function initModel (config, unwrapOptions) {
-  return data => edata(data, {
-    unwrapConfig: unwrapAPI(unwrapOptions),
-    ...config
-  })
+  return data => {
+    const model = edata(data, {
+      unwrapConfig: unwrapAPI(unwrapOptions),
+      ...config
+    })
+    const {getAPIFromRoute} = getAPIFactoryFromModel(model)
+    unwrapOptions.apiProps = getAPIFromRoute({api: ['*']})
+    return model
+  }
+}
+
+export function getAPIFactoryFromModel(model) {
+  const allAPI = Object.keys((model.get(['_api']) || {}).value || {})
+    function expandAPINameItem (val) {
+      let names = [val]
+      if(val instanceof RegExp){
+        names = allAPI.filter(v=>val.test(v))
+      }
+      if(val === '*') {
+        names = allAPI
+      }
+      return names
+    }
+
+    function getAPIFromRoute ({ api = [] }) {
+      const props = {}
+      // const apiObj = model.unwrap(['_api', '_global']) || {}
+      // Object.keys(apiObj).forEach((key) => {
+      //   props[key] = model.unwrap(['_api', '_global', key])
+      // })
+      // props.store = model.unwrap(['_store', '_global']) || {}
+
+      api.forEach(val => {
+        const names = expandAPINameItem(val)
+        names.filter(Boolean).forEach(name=>{
+          const services = {}
+          props[name] = services
+          const apiObj = (model.get(['_api', name]) || {}).value || {}
+          Object.keys(apiObj).forEach((key) => {
+            services[key] = model.unwrap(['_api', name, key])
+          })
+          services.store = model.unwrap(['_store', name]) || {}
+        })
+      })
+      return props
+    }
+    return {getAPIFromRoute}
 }
 
 export function constOrFunction(value) {
@@ -137,7 +180,7 @@ export function unwrapAPI(unwrapOptions = {}) {
         map: apiConfig => {
           return (query, options = {}) =>
             Promise.resolve(isFunction(apiConfig) ? apiConfig(packer) : apiConfig).then(apiConfig => {
-              const { paramStyle, queryKey, mockKey, debug } = unwrapOptions
+              const { paramStyle, queryKey, mockKey, debug, apiProps } = unwrapOptions
               const ajaxSetting = { ...globalAjaxSetting, ...unwrapOptions.ajaxSetting }
               options = options || {}
               const actions = model.unwrap(['_actions', name]) || {}
@@ -198,7 +241,7 @@ export function unwrapAPI(unwrapOptions = {}) {
                 clearTimeout(timeoutId)
                 isFunction(errorHandler) && errorHandler(err)
                 if (fail) {
-                  const ret = fail(store, err)
+                  const ret = fail(store, {error: err, props: apiProps, model})
                   if (ret === false) {
                     return Promise.reject(err)
                   }
@@ -212,7 +255,7 @@ export function unwrapAPI(unwrapOptions = {}) {
                 }
               }
               if (!exec.url) {
-                return onSuccess({ data: query })
+                return onSuccess({ param: query, model, props: apiProps })
               }
 
               let mock = exec[mockKey]
@@ -316,6 +359,8 @@ export function unwrapAPI(unwrapOptions = {}) {
                     .then(res => {
                       afterResponse(res)
                       return onSuccess({
+                        props: apiProps,
+                        model,
                         response: res,
                         body: res.body,
                         urlParam,

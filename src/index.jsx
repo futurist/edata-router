@@ -9,7 +9,7 @@ import {
 } from 'react-router'
 import qs from 'qs'
 
-import { makeAPI, initModel, joinPath } from './util'
+import { makeAPI, initModel, joinPath, getAPIFactoryFromModel } from './util'
 import matchPath from './match-path'
 import { Provider, connect } from 'react-redux'
 import { createStore } from 'redux'
@@ -80,45 +80,12 @@ export default class EdataRouterClass {
 
     computeLocationHooks(curLocation)
 
-    const allAPI = Object.keys((model.get(['_api']) || {}).value || {})
     const reducer = (state, action) =>{
       // console.log('reducer', store, action)
     }
     const store = createStore(reducer)
 
-    function expandAPINameItem (val) {
-      let names = [val]
-      if(val instanceof RegExp){
-        names = allAPI.filter(v=>val.test(v))
-      }
-      if(val === '*') {
-        names = allAPI
-      }
-      return names
-    }
-
-    function getAPIFromRoute ({ api = [] }) {
-      const props = {}
-      // const apiObj = model.unwrap(['_api', '_global']) || {}
-      // Object.keys(apiObj).forEach((key) => {
-      //   props[key] = model.unwrap(['_api', '_global', key])
-      // })
-      // props.store = model.unwrap(['_store', '_global']) || {}
-
-      api.forEach(val => {
-        const names = expandAPINameItem(val)
-        names.filter(Boolean).forEach(name=>{
-          const services = {}
-          props[name] = services
-          const apiObj = (model.get(['_api', name]) || {}).value || {}
-          Object.keys(apiObj).forEach((key) => {
-            services[key] = model.unwrap(['_api', name, key])
-          })
-          services.store = model.unwrap(['_store', name]) || {}
-        })
-      })
-      return props
-    }
+    const {getAPIFromRoute} = getAPIFactoryFromModel(model)
 
     var componentMap = {}
     function getPathForComponent(route) {
