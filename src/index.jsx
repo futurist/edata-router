@@ -18,18 +18,18 @@ const createBrowserHistory = History.createHistory || History.createBrowserHisto
 const createHashHistory = History.createHashHistory
 
 export default class EdataRouterClass {
-  constructor ({
-      initData = {},
-      name,
-      debug = false,
-      routeMode = 'hash',
-      paramStyle = 'simple',
-      queryKey = 'param',
-      mockKey = 'mock',
-      edataConfig,
-      ajaxConfig,
-      historyConfig
-    } = {}) {
+  constructor({
+    initData = {},
+    name,
+    debug = false,
+    routeMode = 'hash',
+    paramStyle = 'simple',
+    queryKey = 'param',
+    mockKey = 'mock',
+    edataConfig,
+    ajaxConfig,
+    historyConfig
+  } = {}) {
     this.data = initData
     this.name = name
     this.routeMode = routeMode
@@ -45,22 +45,22 @@ export default class EdataRouterClass {
       ajaxConfig,
       historyConfig
     }
-    this.makeModel = initModel(edataConfig, {ajaxSetting: ajaxConfig, debug, paramStyle, queryKey, mockKey})
+    this.makeModel = initModel(edataConfig, { ajaxSetting: ajaxConfig, debug, paramStyle, queryKey, mockKey })
   }
-  model (modelActions, modelObject) {
-    if(typeof modelActions==='function') {
+  model(modelActions, modelObject) {
+    if (typeof modelActions === 'function') {
       modelActions(this.data)
     } else {
       // makeAPI({name: '_global', ...modelActions}, modelObject)(this.data)
-      makeAPI({...modelActions}, modelObject)(this.data)
+      makeAPI({ ...modelActions }, modelObject)(this.data)
     }
   }
-  route (routes) {
+  route(routes) {
     this.routes = routes
   }
-  run (options = {}) {
+  run(options = {}) {
     let curHooksBranch = []
-    const { routes, data, options: {routeMode, historyConfig} } = this
+    const { routes, data, options: { routeMode, historyConfig } } = this
     const model = this.model = window.model = this.makeModel(data)
     const isHashMode = routeMode === 'hash'
     // const Router = isHashMode ? HashRouter : BrowserRouter
@@ -80,32 +80,32 @@ export default class EdataRouterClass {
 
     computeLocationHooks(curLocation)
 
-    const reducer = (state, action) =>{
+    const reducer = (state, action) => {
       // console.log('reducer', store, action)
     }
     const store = createStore(reducer)
 
-    const {getAPIFromRoute} = getAPIFactoryFromModel(model)
+    const { getAPIFromRoute } = getAPIFactoryFromModel(model)
 
     var componentMap = {}
     function getPathForComponent(route) {
-      const {path, component, api = []} = route
-      if(path in componentMap) {
+      const { path, component, api = [] } = route
+      if (path in componentMap) {
         return componentMap[path]
       } else {
         // const allApiNames = arrayUniq(arrayFlat(api.map(expandAPINameItem)))
-        const mapStateToProps = (state, ownProps) => {}
+        const mapStateToProps = (state, ownProps) => { }
         const mapDispatchToProps = (dispatch, ownProps) => {
           const props = getAPIFromRoute(route)
-          Object.keys(props).map(name=>{
+          Object.keys(props).map(name => {
             const service = props[name]
-            for(let name in service) {
+            for (let name in service) {
               const f = service[name]
-              if(typeof f === 'function') {
+              if (typeof f === 'function') {
                 service[name] = function (...args) {
                   const ret = f.apply(this, args)
-                  Promise.resolve(ret).then(()=>{
-                    dispatch({type: 'action'})
+                  Promise.resolve(ret).then(() => {
+                    dispatch({ type: 'action' })
                   })
                   return ret
                 }
@@ -114,11 +114,11 @@ export default class EdataRouterClass {
           })
           return props
         }
-        return componentMap[path] = connect(mapStateToProps, mapDispatchToProps, null, {pure: false})(component)
+        return componentMap[path] = connect(mapStateToProps, mapDispatchToProps, null, { pure: false })(component)
       }
     }
 
-    function RouteWithSubRoutes (route) {
+    function RouteWithSubRoutes(route) {
       const { model, modelName } = route
       let subModule = model
       if (modelName) {
@@ -165,16 +165,16 @@ export default class EdataRouterClass {
         />
       )
     }
-    function computeLocationHooks (location) {
+    function computeLocationHooks(location) {
       const branch = matchRoutes(routes, location.pathname)
       const getState = (v, location, routes) => {
-        if(!location.query) {
+        if (!location.query) {
           location.query = qs.parse(location.search.slice(1))
         }
         return {
-          location: {...location},
-          params: (v.match||{}).params || {},
-          routes: routes.map(v=>v.route)
+          location: { ...location },
+          params: (v.match || {}).params || {},
+          routes: routes.map(v => v.route)
         }
       };
       const exitList = routeDifference(curHooksBranch, branch)
@@ -206,12 +206,12 @@ export default class EdataRouterClass {
             ...history,
             isActive(pathname) {
               pathname = pathname.trim().replace(/\/$/, '')
-              return curHooksBranch.some((e)=> ((e.match||{}).path||'').indexOf(pathname) === 0 )
+              return curHooksBranch.some((e) => ((e.match || {}).path || '').indexOf(pathname) === 0)
             }
           }
         }
       }
-      render () {
+      render() {
         return (
           <Provider store={store}>
             <Router history={history}>
@@ -232,7 +232,7 @@ export default class EdataRouterClass {
   }
 }
 
-function routeDifference (arr1, arr2) {
+function routeDifference(arr1, arr2) {
   var result = []
   arr2 = arr2.map(v => v.route)
   for (var i = 0; i < arr1.length; i++) {
@@ -247,7 +247,7 @@ function routeDifference (arr1, arr2) {
  * Add childRoutes support
  * https://github.com/ReactTraining/react-router/blob/master/packages/react-router-config/modules/matchRoutes.js
  */
-function matchRoutes (routes, pathname, /* not public API */ options = {}) {
+function matchRoutes(routes, pathname, /* not public API */ options = {}) {
   const { branch = [] } = options
   routes.some(route => {
     const fullPath = joinPath(options.path, route.path)
@@ -272,7 +272,7 @@ function matchRoutes (routes, pathname, /* not public API */ options = {}) {
   return branch
 }
 
-function computeRootMatch (pathname) {
+function computeRootMatch(pathname) {
   return {
     path: "/",
     url: "/",

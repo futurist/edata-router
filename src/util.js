@@ -1,25 +1,33 @@
 import forEach from 'lodash/forEach'
 import set from 'lodash/set'
 import qs from 'qs'
-import edata, { EdataBaseClass } from 'edata'
+import edata, {
+  EdataBaseClass
+} from 'edata'
 import isPOJO from 'is-plain-obj'
 import pathToRegexp from 'path-to-regexp'
 
 import 'url-polyfill'
 import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only'
-import { fetch } from 'whatwg-fetch'
+import {
+  fetch
+} from 'whatwg-fetch'
 
-import {parse as parseResponse} from './fetch-parse'
+import {
+  parse as parseResponse
+} from './fetch-parse'
 import MediaType from 'medium-type'
-const WILDCARD_PARSER = [[new MediaType("*/*"), null]]
+const WILDCARD_PARSER = [
+  [new MediaType("*/*"), null]
+]
 
-export function noop(){}
+export function noop() {}
 
 export function isFunction(e) {
   return typeof e === 'function'
 }
 
-export function joinPath (prev, url) {
+export function joinPath(prev, url) {
   prev = prev || ''
   if (url[0] != '/') url = '/' + url
   if (prev[prev.length - 1] == '/') prev = prev.slice(0, -1)
@@ -33,8 +41,11 @@ const defaultHeaders = {
   'Content-Type': 'application/json; charset=utf-8'
 }
 
-const defaultReplaceParams = { encode: noop }
-function replaceParams (url, params, options) {
+const defaultReplaceParams = {
+  encode: noop
+}
+
+function replaceParams(url, params, options) {
   return pathToRegexp.compile(url)(params || {}, options)
 }
 
@@ -53,19 +64,21 @@ export function parseUrlPart(url) {
 // console.log(parseUrlPart('http://10.0.2.2:8081/playground/index.bundle?platform=android&dev=true&minify=false'))
 
 export function joinUrlPart(obj) {
-  const { protocol = '', host = '', pathname = '', query = '', hash = '' } = obj
+  const {
+    protocol = '', host = '', pathname = '', query = '', hash = ''
+  } = obj
   return protocol + host + pathname + (query ? '?' + query : '') + (hash ? '#' + hash : '')
 }
 
-function defaultGetResponse (response) {
+function defaultGetResponse(response) {
   return parseResponse(WILDCARD_PARSER, response)
 }
 
-function identity (res) {
+function identity(res) {
   return res
 }
 
-function debugErrorHandler (err) {
+function debugErrorHandler(err) {
   if (err.name === 'AbortError') {
     console.log('request aborted')
   }
@@ -73,10 +86,10 @@ function debugErrorHandler (err) {
 }
 
 function unwrapEData(edata) {
-    while(edata instanceof EdataBaseClass) {
-        edata = edata.value
-    }
-    return edata
+  while (edata instanceof EdataBaseClass) {
+    edata = edata.value
+  }
+  return edata
 }
 
 export const globalAjaxSetting = {
@@ -87,9 +100,9 @@ export const globalAjaxSetting = {
   errorHandler: null
 }
 
-export function makeAPI (model, res) {
+export function makeAPI(model, res) {
   const namespace = model.name || model.displayName
-  if(!namespace) {
+  if (!namespace) {
     throw `model should have .name or .displayName: ${JSON.stringify(model)}`
   }
   return data => {
@@ -97,14 +110,20 @@ export function makeAPI (model, res) {
     data._store = data._store || {}
     data._actions = data._actions || {}
     data._api = data._api || {}
-    data._store[namespace] = new EdataBaseClass({...model.store, ...unwrapEData(data._store[namespace])})
-    data._actions[namespace] = new EdataBaseClass({...model.actions, ...unwrapEData(data._actions[namespace])})
+    data._store[namespace] = new EdataBaseClass({
+      ...model.store,
+      ...unwrapEData(data._store[namespace])
+    })
+    data._actions[namespace] = new EdataBaseClass({
+      ...model.actions,
+      ...unwrapEData(data._actions[namespace])
+    })
     forEach(res, (value, key) => {
       set(data._api, [namespace, key], value)
     })
     const apis = data._api[namespace] || {}
-    forEach(model.actions, (value, key)=>{
-      if(!(key in apis)) {
+    forEach(model.actions, (value, key) => {
+      if (!(key in apis)) {
         set(data._api, [namespace, key], {})
       }
     })
@@ -112,54 +131,63 @@ export function makeAPI (model, res) {
   }
 }
 
-export function initModel (config, unwrapOptions) {
+export function initModel(config, unwrapOptions) {
   return data => {
     const model = edata(data, {
       unwrapConfig: unwrapAPI(unwrapOptions),
       ...config
     })
-    const {getAPIFromRoute} = getAPIFactoryFromModel(model)
-    unwrapOptions.apiProps = getAPIFromRoute({api: ['*']})
+    const {
+      getAPIFromRoute
+    } = getAPIFactoryFromModel(model)
+    unwrapOptions.apiProps = getAPIFromRoute({
+      api: ['*']
+    })
     return model
   }
 }
 
 export function getAPIFactoryFromModel(model) {
   const allAPI = Object.keys((model.get(['_api']) || {}).value || {})
-    function expandAPINameItem (val) {
-      let names = [val]
-      if(val instanceof RegExp){
-        names = allAPI.filter(v=>val.test(v))
-      }
-      if(val === '*') {
-        names = allAPI
-      }
-      return names
+
+  function expandAPINameItem(val) {
+    let names = [val]
+    if (val instanceof RegExp) {
+      names = allAPI.filter(v => val.test(v))
     }
+    if (val === '*') {
+      names = allAPI
+    }
+    return names
+  }
 
-    function getAPIFromRoute ({ api = [] } = {}) {
-      const props = {}
-      // const apiObj = model.unwrap(['_api', '_global']) || {}
-      // Object.keys(apiObj).forEach((key) => {
-      //   props[key] = model.unwrap(['_api', '_global', key])
-      // })
-      // props.store = model.unwrap(['_store', '_global']) || {}
+  function getAPIFromRoute({
+    api = []
+  } = {}) {
+    const props = {}
+    // const apiObj = model.unwrap(['_api', '_global']) || {}
+    // Object.keys(apiObj).forEach((key) => {
+    //   props[key] = model.unwrap(['_api', '_global', key])
+    // })
+    // props.store = model.unwrap(['_store', '_global']) || {}
 
-      api.forEach(val => {
-        const names = expandAPINameItem(val)
-        names.filter(Boolean).forEach(name=>{
-          const services = {}
-          props[name] = services
-          const apiObj = (model.get(['_api', name]) || {}).value || {}
-          Object.keys(apiObj).forEach((key) => {
-            services[key] = model.unwrap(['_api', name, key])
-          })
-          services.store = model.unwrap(['_store', name]) || {}
+    api.forEach(val => {
+      const names = expandAPINameItem(val)
+      names.filter(Boolean).forEach(name => {
+        const services = {}
+        props[name] = services
+        const apiObj = (model.get(['_api', name]) || {}).value || {}
+        Object.keys(apiObj).forEach((key) => {
+          services[key] = model.unwrap(['_api', name, key])
         })
+        services.store = model.unwrap(['_store', name]) || {}
       })
-      return props
-    }
-    return {getAPIFromRoute}
+    })
+    return props
+  }
+  return {
+    getAPIFromRoute
+  }
 }
 
 export function constOrFunction(value) {
@@ -172,7 +200,10 @@ const fakeDomain = 'http://0.0.0.0'
 export function unwrapAPI(unwrapOptions = {}) {
   return packer => {
     if (!packer) return
-    const { path, root } = packer
+    const {
+      path,
+      root
+    } = packer
     const model = root
     const [prefix, name, service] = path
     if (prefix == '_api' && path.length === 3) {
@@ -180,18 +211,30 @@ export function unwrapAPI(unwrapOptions = {}) {
         map: apiConfig => {
           return (query, options = {}) =>
             Promise.resolve(isFunction(apiConfig) ? apiConfig(packer) : apiConfig).then(apiConfig => {
-              const { paramStyle, queryKey, mockKey, debug, apiProps } = unwrapOptions
-              const ajaxSetting = { ...globalAjaxSetting, ...unwrapOptions.ajaxSetting }
+              const {
+                paramStyle,
+                queryKey,
+                mockKey,
+                debug,
+                apiProps
+              } = unwrapOptions
+              const ajaxSetting = {
+                ...globalAjaxSetting,
+                ...unwrapOptions.ajaxSetting
+              }
               options = options || {}
               const actions = model.unwrap(['_actions', name]) || {}
               const store = model.unwrap(['_store', name]) || {}
               let actionService = actions[service]
-              if(isFunction(actionService)) {
+              if (isFunction(actionService)) {
                 actionService = {
                   callback: actionService
                 }
               }
-              const actionConfig = { ...ajaxSetting, ...actionService }
+              const actionConfig = {
+                ...ajaxSetting,
+                ...actionService
+              }
               let {
                 exec,
                 reducer,
@@ -212,7 +255,10 @@ export function unwrapAPI(unwrapOptions = {}) {
                   map: v => v,
                 })
               }
-              if (!exec) exec = { ...actionConfig, ...apiConfig }
+              if (!exec) exec = {
+                ...actionConfig,
+                ...apiConfig
+              }
               const success =
                 (callback && callback.success) ||
                 (reducer && reducer.success) ||
@@ -241,7 +287,11 @@ export function unwrapAPI(unwrapOptions = {}) {
                 clearTimeout(timeoutId)
                 isFunction(errorHandler) && errorHandler(err)
                 if (fail) {
-                  const ret = fail(store, {error: err, props: apiProps, model})
+                  const ret = fail(store, {
+                    error: err,
+                    props: apiProps,
+                    model
+                  })
                   if (ret === false) {
                     return Promise.reject(err)
                   }
@@ -255,7 +305,11 @@ export function unwrapAPI(unwrapOptions = {}) {
                 }
               }
               if (!exec.url) {
-                return onSuccess({ param: query, model, props: apiProps })
+                return onSuccess({
+                  param: query,
+                  model,
+                  props: apiProps
+                })
               }
 
               let mock = exec[mockKey]
@@ -277,19 +331,22 @@ export function unwrapAPI(unwrapOptions = {}) {
               if (base && !REGEX_HTTP_PROTOCOL.test(url)) {
                 url = joinPath(base + '', url)
               }
-              query = {...param, ...query}
+              query = {
+                ...param,
+                ...query
+              }
               let searchString = ''
               if (!hasBody && !isEmpty(query)) {
                 searchString = qs.stringify(query)
               }
-              if(options.query) {
+              if (options.query) {
                 let addon = ''
-                if(searchString) {
+                if (searchString) {
                   addon = '&'
                 }
                 searchString += addon + qs.stringify(options.query)
               }
-              if(searchString) {
+              if (searchString) {
                 url = url + '?' + searchString
               }
               const controller = new AbortController()
@@ -338,17 +395,17 @@ export function unwrapAPI(unwrapOptions = {}) {
                     Object.assign(store, startStore)
                     model.set(['_store', name], model.of(store))
                   }
-                  let promise = mock
-                    ? Promise.resolve(
-                        isFunction(mock)
-                          ? mock()
-                          : mock instanceof Response
-                          ? mock
-                          : new Response(
-                              isPOJO(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock,
-                            ),
-                      )
-                    : abortableFetch(url, init)
+                  let promise = mock ?
+                    Promise.resolve(
+                      isFunction(mock) ?
+                      mock() :
+                      mock instanceof Response ?
+                      mock :
+                      new Response(
+                        isPOJO(mock) || Array.isArray(mock) ? JSON.stringify(mock) : mock,
+                      ),
+                    ) :
+                    abortableFetch(url, init)
                   // console.error(url, init)
                   return Promise.race([timeoutPromise, promise])
                     .then(() => {
@@ -383,7 +440,7 @@ export function unwrapAPI(unwrapOptions = {}) {
 /**
  * Checks if a value is empty.
  */
-export function isEmpty (value) {
+export function isEmpty(value) {
   if (Array.isArray(value)) {
     return value.length === 0
   } else if (typeof value === 'object') {
@@ -401,7 +458,7 @@ export function isEmpty (value) {
   }
 }
 
-export function isIterable (value) {
+export function isIterable(value) {
   if (typeof Symbol === 'undefined') {
     return false
   }
