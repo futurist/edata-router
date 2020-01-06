@@ -33,7 +33,13 @@ const app = new EdataRouter({
 
 // 导入接口配置
 app.model(actions1)
-app.model(actions2)
+app.model(actions2, {
+  // 可选传入资源定义
+  getList: {
+    url: '/analysis/api/products/cat/:id',
+    method: 'GET',
+  }
+)
 ... ...
 
 // 设置路由
