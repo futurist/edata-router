@@ -51,6 +51,13 @@ app.route(routes)
 const App = app.run()
 render(<App></App>, document.getElementById('main'))
 
+app.props  // 包含所有的API
+app.history  // 全局history对象 
+app.model  // 全局model
+app.routes  // 全局routes配置
+app.options  // 启动options
+
+
 ```
 
 
