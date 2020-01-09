@@ -1,3 +1,10 @@
+<a name="v3.0.4"></a>
+## [v3.0.4](/compare/v3.0.3...v3.0.4) (2020-1-9 09:39:14)
+
+- add run.store  [b9d8ad7](/commit/b9d8ad7)
+- update docs  [00e4781](/commit/00e4781)
+
+
 <a name="v3.0.3"></a>
 ## [v3.0.3](/compare/v3.0.2...v3.0.3) (2020-1-9 09:03:01)
 
