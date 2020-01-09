@@ -23,12 +23,22 @@ import {actions1, actions2} from './actions'
 
 const app = new EdataRouter({
   ajaxConfig: {
+    base: '',  // 所有请求的 baseUrl
     headers: {},
-    beforeRequest: (init)=>{},
-    getResponse: (response)=>{},
-    afterResponse: (response)=>{},
-    errorHandler: (error)=>{}
-  }
+    beforeRequest: (init)=>{}, 
+    getResponse: (response)=>{return response.json()},  //获取 Request 内容的方式，参见 FetchAPI
+    afterResponse: (response)=>{},  // 请求成功 hook
+    errorHandler: (error)=>{}   // 请求失败 hook
+  },
+  historyConfig: {},  // 传给 history 模块的参数
+  initData = {},  // 传给 model 的初始值
+  name,   // 可选名称
+  debug = false,  // debug 模块开启会输出更多信息
+  routeMode = 'hash',  // 默认 hash 路由模式
+  paramStyle = 'simple',  // 'beatle', 'simple'，影响到 api 请求第二个参数形式，若为 simple 则 k/v 值会传到 path-to-regex
+  queryKey = 'param',  // 从 action 中读取 param 的默认 key
+  mockKey = 'mock',  // 从 action 中读取 mock 的默认 key
+  edataConfig,  // edataConfig 参数
 })
 
 // 导入接口配置
