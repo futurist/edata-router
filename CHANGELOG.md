@@ -1,3 +1,11 @@
+<a name="v3.0.3"></a>
+## [v3.0.3](/compare/v3.0.2...v3.0.3) (2020-1-9 09:03:01)
+
+- add apiProps to instance  [6bdd94a](/commit/6bdd94a)
+- update docs  [0a72ed7](/commit/0a72ed7)
+- update docs  [eb6b0a6](/commit/eb6b0a6)
+
+
 <a name="v3.0.2"></a>
 ## [v3.0.2](/compare/v3.0.1...v3.0.2) (2020-1-2 19:51:30)
 
