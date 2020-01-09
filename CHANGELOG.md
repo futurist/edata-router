@@ -1,3 +1,10 @@
+<a name="v3.0.5"></a>
+## [v3.0.5](/compare/v3.0.4...v3.0.5) (2020-1-9 11:39:04)
+
+- fix: this.model bug  [2f8c544](/commit/2f8c544)
+- update docs  [9195ae8](/commit/9195ae8)
+
+
 <a name="v3.0.4"></a>
 ## [v3.0.4](/compare/v3.0.3...v3.0.4) (2020-1-9 09:39:14)
 
