@@ -84,7 +84,7 @@ export default class EdataRouterClass {
     const reducer = (state, action) => {
       // console.log('reducer', store, action)
     }
-    const store = createStore(reducer)
+    const store = this.store = createStore(reducer)
 
     const { getAPIFromRoute } = getAPIFactoryFromModel(model)
 
