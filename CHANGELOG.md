@@ -1,3 +1,10 @@
+<a name="v3.0.6"></a>
+## [v3.0.6](/compare/v3.0.5...v3.0.6) (2020-2-15 09:23:41)
+
+- add jsonapi props to actions  [da90e18](/commit/da90e18)
+- new build  [9df7fe4](/commit/9df7fe4)
+
+
 <a name="v3.0.5"></a>
 ## [v3.0.5](/compare/v3.0.4...v3.0.5) (2020-1-9 11:39:04)
 
