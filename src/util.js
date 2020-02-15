@@ -259,6 +259,8 @@ export function unwrapAPI(unwrapOptions = {}) {
                 ...actionConfig,
                 ...apiConfig
               }
+              // isJsonApi: https://jsonapi.org/format/
+              const isJsonApi = exec.jsonapi || actions.jsonapi
               const success =
                 (callback && callback.success) ||
                 (reducer && reducer.success) ||
@@ -378,7 +380,7 @@ export function unwrapAPI(unwrapOptions = {}) {
                   ...constOrFunction(headers),
                   ...constOrFunction(exec.headers),
                 },
-                body: hasBody ? JSON.stringify(query) : undefined,
+                body: hasBody ? JSON.stringify(convertBody(query, isJsonApi, false)) : undefined,
                 ...options,
                 url,
               }
@@ -414,6 +416,7 @@ export function unwrapAPI(unwrapOptions = {}) {
                     })
                     .then(getResponse)
                     .then(res => {
+                      res.body = convertBody(res.body, isJsonApi, true)
                       afterResponse(res)
                       return onSuccess({
                         props: apiProps,
@@ -433,6 +436,51 @@ export function unwrapAPI(unwrapOptions = {}) {
             })
         },
       }
+    }
+  }
+}
+
+/**
+ * Convert body data to jsonapi or not
+ * @param {Object} body Body data to convert
+ * @param {boolean} isJsonApi if the data is passing to jsonapi endpoint
+ * @param {boolean} isResult if the data is result or request payload
+ */
+export function convertBody(body, isJsonApi, isResult) {
+  if(!isJsonApi) {
+    return body
+  }
+  if(isResult) {
+    if(body.errors) {
+      return body
+    }
+    const {data, ...restBody} = body
+    const convertDataItem = item => {
+      const {attributes, ...rest} = item
+      return {
+        ...rest,
+        ...attributes
+      }
+    }
+    const ret = {
+      data: Array.isArray(data) ? data.map(convertDataItem) : convertDataItem(data),
+      ...restBody
+    }
+    ret.jsonapi.flat = true
+    return ret
+  } else {
+    const {data, ...restBody} = body
+    const {type, id, ...rest} = data
+    if(rest.attributes) {
+      return body
+    }
+    return {
+      data: {
+        type,
+        id,
+        attributes: rest
+      },
+      ...restBody
     }
   }
 }
